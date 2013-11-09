@@ -168,8 +168,7 @@ static struct leds_control {
 
 extern struct class *sec_class;
 struct device *led_dev;
-<<<<<<< HEAD
-=======
+
 int led_enable_fade = 0;
 int led_enable_fade_charging = 0;
 u8 led_intensity = 0;
@@ -377,9 +376,6 @@ static void an30259a_start_led_pattern(int mode)
 	struct i2c_client *client;
 	struct work_struct *reset = 0;
 	client = b_client;
-<<<<<<< HEAD
-
-=======
 	
 	if (block_leds_check_allowed)
 	{
@@ -504,13 +500,11 @@ static void an30259a_set_led_blink(enum an30259a_led_enum led,
 		prev_delay_off_time[led] = delay_off_time;
 		prev_brightness[led] = brightness;
 	}
-<<<<<<< HEAD
-=======
+
 	if (brightness == LED_OFF)
 		notif_wakelock_forwake_funcs(false);
 	else
 		notif_wakelock_forwake_funcs(true);
->>>>>>> a47bf12... Add s2w, d2w, w2w and p2w
 
 	if (brightness == LED_OFF) {
 		leds_on(led, false, false, brightness);

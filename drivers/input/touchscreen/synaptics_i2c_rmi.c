@@ -1724,13 +1724,8 @@ static int synaptics_rmi4_f12_abs_report(struct synaptics_rmi4_data *rmi4_data,
 #ifndef TYPE_B_PROTOCOL
 			input_mt_sync(rmi4_data->input_dev);
 #endif
-<<<<<<< HEAD
 
 			if (!rmi4_data->finger[finger].state)
-=======
-			if (ktoonservative_is_activef)
-				boostpulse_relay_kt();
-			hotplugap_boostpulse();
 			
 			if (screen_is_off && screen_wake_options)
 			{
@@ -1818,17 +1813,16 @@ static int synaptics_rmi4_f12_abs_report(struct synaptics_rmi4_data *rmi4_data,
 		}
 
 		if (rmi4_data->finger[finger].state && !finger_status) {
-<<<<<<< HEAD
+
 			dev_info(&rmi4_data->i2c_client->dev, "[%d][R] 0x%02x M[%d] V[%x]\n",
 				finger, finger_status, rmi4_data->finger[finger].mcount,
 				rmi4_data->fw_version_of_ic);
-=======
+
 			//dev_info(&rmi4_data->i2c_client->dev, "[%d][R] 0x%02x M[%d] V[%x]\n",
 			//	finger, finger_status, rmi4_data->finger[finger].mcount,
 			//	rmi4_data->fw_version_of_ic);
 			//pr_alert("KT TOUCH BOOSTER RELEASE");
 			wake_start = 0;
->>>>>>> a47bf12... Add s2w, d2w, w2w and p2w
 
 			rmi4_data->finger[finger].mcount = 0;
 		}
@@ -4495,15 +4489,13 @@ static void synaptics_rmi4_early_suspend(struct early_suspend *h)
 	struct synaptics_rmi4_data *rmi4_data =
 			container_of(h, struct synaptics_rmi4_data,
 			early_suspend);
-<<<<<<< HEAD
 
 	if (rmi4_data->stay_awake) {
 		rmi4_data->staying_awake = true;
 		return;
 	} else {
 		rmi4_data->staying_awake = false;
-=======
-	
+
 	screen_is_off = true;
 	
 	mutex_lock(&rmi4_data->input_dev->mutex);
@@ -4528,7 +4520,6 @@ static void synaptics_rmi4_early_suspend(struct early_suspend *h)
 			wake_lock_timeout(&wakelock, msecs_to_jiffies(3600000));
 		else if (screen_wake_options_hold_wlock == 10)
 			wake_lock_timeout(&wakelock, msecs_to_jiffies(7200000));
->>>>>>> a47bf12... Add s2w, d2w, w2w and p2w
 	}
 	if (screen_wake_options)
 	{
@@ -4575,7 +4566,6 @@ static void synaptics_rmi4_late_resume(struct early_suspend *h)
 			early_suspend);
 	
 	int retval;
-<<<<<<< HEAD
 
 	if (rmi4_data->staying_awake)
 		return;
@@ -4603,8 +4593,6 @@ static void synaptics_rmi4_late_resume(struct early_suspend *h)
 			dev_err(&rmi4_data->i2c_client->dev,
 					"%s: Failed to read ldi ID2\n",
 					__func__);
-=======
->>>>>>> a47bf12... Add s2w, d2w, w2w and p2w
 
 	mutex_lock(&rmi4_data->input_dev->mutex);
 

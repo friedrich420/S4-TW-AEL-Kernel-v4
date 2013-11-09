@@ -31,7 +31,10 @@
 #define PON_CNTL_1 0x1C
 #define PON_CNTL_PULL_UP BIT(7)
 #define PON_CNTL_TRIG_DELAY_MASK (0x7)
+<<<<<<< HEAD
+=======
 
+>>>>>>> a47bf12... Add s2w, d2w, w2w and p2w
 /**
  * struct pmic8xxx_pwrkey - pmic8xxx pwrkey information
  * @key_press_irq: key press irq number
@@ -40,8 +43,11 @@
 struct pmic8xxx_pwrkey {
 	struct input_dev *pwr;
 	int key_press_irq;
+<<<<<<< HEAD
 	u32	powerkey_state;
+=======
 	u32	powerkey_state ;
+>>>>>>> a47bf12... Add s2w, d2w, w2w and p2w
 	int key_release_irq;
 	bool press;
 	const struct pm8xxx_pwrkey_platform_data *pdata;
