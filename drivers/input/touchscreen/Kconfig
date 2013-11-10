@@ -1065,5 +1065,4 @@ config TOUCHSCREEN_SWEEP2WAKE_QPNP_PON
 
 endchoice
 
->>>>>>> 4af2fff... sweep2wake: add qpnp-power-on hooks for the power key
 endif
