@@ -21,8 +21,22 @@
 #ifndef _LINUX_SWEEP2WAKE_H
 #define _LINUX_SWEEP2WAKE_H
 
+<<<<<<< HEAD
 extern bool s2w_scr_suspend;
 extern int s2w_switch, s2w_s2sonly;
+=======
+#include <linux/input.h>
+#include <linux/earlysuspend.h>
+#include <linux/hrtimer.h>
+
+#define SWEEP2WAKE_I2C_SLEEP 40
+
+extern int s2w_switch;
+extern bool irq_wake;
+
+/* PowerKey setter */
+extern void sweep2wake_setdev(struct input_dev *);
+>>>>>>> da853a4... sweep2wake: massive update, bring on par with s2w2 except algorithm
 
 #endif	/* _LINUX_SWEEP2WAKE_H */
 

@@ -42,7 +42,7 @@
  * $32          Timer                                           89
  * $34          Flash Memory Management                         93
 
-#ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE_QPNP_PON
+#ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE_PREVENT_SLEEP
 #include <linux/input/sweep2wake.h>
 #endif
 
@@ -214,11 +214,6 @@ static int synaptics_init_panel(struct i2c_client *client,
 static int get_ic_info(struct synaptics_ts_data *ts,
 					struct synaptics_ts_fw_info *fw_info);
 
-#ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE
-/* gives back true if only one touch is recognized */
-extern bool is_single_touch(struct synaptics_ts_data *);
-#endif
-
 /* touch_asb_input_report
  *
  * finger status report
@@ -236,9 +231,6 @@ static void touch_abs_input_report(struct synaptics_ts_data *ts)
 				ts->ts_data.curr_data[id].state != ABS_RELEASE);
 
 		if (ts->ts_data.curr_data[id].state != ABS_RELEASE) {
-#ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE
-			detect_sweep2wake(ts->ts_data.curr_data[id].x_position, ts->ts_data.curr_data[id].y_position, is_single_touch(ts));
-#endif
 			input_report_abs(ts->input_dev, ABS_MT_POSITION_X,
 					ts->ts_data.curr_data[id].x_position);
 			input_report_abs(ts->input_dev, ABS_MT_POSITION_Y,
@@ -252,11 +244,6 @@ static void touch_abs_input_report(struct synaptics_ts_data *ts)
 		}
 		else {
 			ts->ts_data.curr_data[id].state = 0;
-#ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE
-			if (s2w_switch > 0) {
-				sweep2wake_reset();
-			}
-#endif
 		}
 	}
 >>>>>>> cdd22a0... drivers/input/touchscreen/touch_synaptics: patch with sweep2wake hooks as well
@@ -494,7 +481,7 @@ static int read_page_description_table(struct i2c_client* client)
 		return -EIO;
 	if (ts->curr_pwr_state == POWER_ON) {
 		disable_irq(ts->client->irq);
-#ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE
+#ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE_PREVENT_SLEEP
 		if (irq_wake) {
 			irq_wake = false;
 			disable_irq_wake(ts->client->irq);
@@ -526,7 +513,7 @@ static int read_page_description_table(struct i2c_client* client)
 
 	else {
 		enable_irq(ts->client->irq);
-#ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE
+#ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE_PREVENT_SLEEP
 		if (!irq_wake) {
 			irq_wake = true;
 			enable_irq_wake(ts->client->irq);
@@ -578,7 +565,7 @@ int get_ic_info(struct synaptics_ts_data* ts, struct touch_fw_info* fw_info)
 
 	read_page_description_table(ts->client);
 	enable_irq(ts->client->irq);
-#ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE
+#ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE_PREVENT_SLEEP
 	if (!irq_wake) {
 		irq_wake = true;
 		enable_irq_wake(ts->client->irq);
@@ -603,7 +590,7 @@ static void touch_recover_func(struct work_struct *work_recover)
 				struct synaptics_ts_data, work_recover);
 
 	disable_irq(ts->client->irq);
-#ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE
+#ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE_PREVENT_SLEEP
 	if (irq_wake) {
 		irq_wake = false;
 		disable_irq_wake(ts->client->irq);
@@ -611,7 +598,7 @@ static void touch_recover_func(struct work_struct *work_recover)
 #endif
 	safety_reset(ts);
 	enable_irq(ts->client->irq);
-#ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE
+#ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE_PREVENT_SLEEP
 	if (!irq_wake) {
 		irq_wake = true;
 		enable_irq_wake(ts->client->irq);
@@ -695,7 +682,7 @@ static void touch_recover_func(struct work_struct *work_recover)
 err_out_retry:
 	ts->ic_init_err_cnt++;
 	disable_irq_nosync(ts->client->irq);
-#ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE
+#ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE_PREVENT_SLEEP
 	if (irq_wake) {
 		irq_wake = false;
 		disable_irq_wake(ts->client->irq);
@@ -1042,7 +1029,7 @@ static ssize_t store_ts_reset(struct device *dev,
 	sscanf(buf, "%s", string);
 
 	disable_irq_nosync(ts->client->irq);
-#ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE
+#ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE_PREVENT_SLEEP
 	if (irq_wake) {
 		irq_wake = false;
 		disable_irq_wake(ts->client->irq);
@@ -1082,7 +1069,7 @@ static ssize_t store_ts_reset(struct device *dev,
 	}
 
 	enable_irq(ts->client->irq);
-#ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE
+#ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE_PREVENT_SLEEP
 	if (!irq_wake) {
 		irq_wake = true;
 		enable_irq_wake(ts->client->irq);
@@ -1247,8 +1234,12 @@ static int synaptics_parse_dt(struct device *dev, struct touch_platform_data *pd
 		TOUCH_ERR_MSG("INTERRUPT_STATUS_REG read fail\n");
 		return -EIO;	/* it is critical problem because interrupt will not occur. */
 	}
+<<<<<<< HEAD
 
 #ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE
+=======
+#ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE_PREVENT_SLEEP
+>>>>>>> da853a4... sweep2wake: massive update, bring on par with s2w2 except algorithm
 	if (s2w_switch == 0)
 #endif
 	{
@@ -1327,15 +1318,9 @@ int synaptics_ts_power(struct i2c_client* client, int power_ctrl)
 	switch (event) {
 	case LCD_EVENT_ON_START:
 		synaptics_ts_start(ts);
-#ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE
-		scr_suspended = false;
-#endif
 		break;
 	case LCD_EVENT_OFF_START:
 		synaptics_ts_stop(ts);
-#ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE
-		scr_suspended = true;
-#endif
 		break;
 	default:
 		return -EIO;
@@ -1345,6 +1330,7 @@ int synaptics_ts_power(struct i2c_client* client, int power_ctrl)
 	return 0;
 }
 
+<<<<<<< HEAD
 int synaptics_ts_probe(struct i2c_client* client)
 
 #ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE
@@ -1402,6 +1388,8 @@ static void touch_synaptics_sysfs_deinit(void)
        kobject_del(android_touch_kobj);
 }
 
+=======
+>>>>>>> da853a4... sweep2wake: massive update, bring on par with s2w2 except algorithm
 static int synaptics_ts_probe(
 	struct i2c_client *client, const struct i2c_device_id *id)
 {
@@ -1411,8 +1399,6 @@ static int synaptics_ts_probe(
 	if (touch_debug_mask & DEBUG_TRACE)
 		TOUCH_DEBUG_MSG("\n");
 	TOUCH_DEBUG_TRACE("%s\n", __func__);
-
-	touch_synaptics_sysfs_init();
 
 	synaptics_wq = create_singlethread_workqueue("synaptics_wq");
 	if (!synaptics_wq)
@@ -1608,7 +1594,11 @@ int synaptics_ts_ic_ctrl(struct i2c_client *client, u8 code, u16 value)
 
 			msleep(10);
 	ret = request_threaded_irq(client->irq, NULL, touch_irq_handler,
+#ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE_PREVENT_SLEEP
 			IRQF_TRIGGER_FALLING | IRQF_ONESHOT | IRQF_NO_SUSPEND, client->name, ts);
+#else
+			IRQF_TRIGGER_FALLING | IRQF_ONESHOT, client->name, ts);
+#endif
 
 			if (unlikely(touch_i2c_write_byte(client,
 						ANALOG_COMMAND_REG,
@@ -1743,8 +1733,6 @@ int synaptics_ts_ic_ctrl(struct i2c_client *client, u8 code, u16 value)
 	default:
 		break;
 	}
-
-	touch_synaptics_sysfs_deinit();
 
 	/* Power off */
 	touch_power_cntl(ts, POWER_OFF);

@@ -31,11 +31,15 @@
 #include <linux/input/sweep2wake.h>
 #include <linux/slab.h>
 #include <linux/workqueue.h>
+<<<<<<< HEAD
 #include <linux/input.h>
 #include <linux/hrtimer.h>
 
 /* uncomment since no touchscreen defines android touch, do that here */
 //#define ANDROID_TOUCH_DECLARED
+=======
+#include <linux/lcd_notify.h>
+>>>>>>> da853a4... sweep2wake: massive update, bring on par with s2w2 except algorithm
 
 /* Version, author, desc, etc */
 #define DRIVER_AUTHOR "Dennis Rassmann <showp1984@gmail.com>"
@@ -81,16 +85,28 @@ MODULE_LICENSE("GPLv2");
 #define DEFAULT_S2W_X_FINAL             250
 
 /* Resources */
+<<<<<<< HEAD
 int s2w_switch = S2W_DEFAULT, s2w_s2sonly = S2W_S2SONLY_DEFAULT;
 static int touch_x = 0, touch_y = 0;
 static bool touch_x_called = false, touch_y_called = false;
 static bool scr_suspended = false, exec_count = true;
 static bool scr_on_touch = false, barrier[2] = {false, false};
 //static struct notifier_block s2w_lcd_notif;
+=======
+int s2w_switch = 1;
+bool irq_wake = false;
+static int touch_x = 0;
+static int touch_y = 0;
+static bool touch_x_called = false, touch_y_called = false;
+static bool scr_suspended = false, exec_count = true;
+static bool scr_on_touch = false, barrier[2] = {false, false};
+static struct notifier_block s2w_lcd_notif;
+>>>>>>> da853a4... sweep2wake: massive update, bring on par with s2w2 except algorithm
 static struct input_dev * sweep2wake_pwrdev;
 static DEFINE_MUTEX(pwrkeyworklock);
 static struct workqueue_struct *s2w_input_wq;
 static struct work_struct s2w_input_work;
+<<<<<<< HEAD
 
 static int s2w_start_posn = DEFAULT_S2W_X_B1;
 static int s2w_mid_posn = DEFAULT_S2W_X_B2;
@@ -99,6 +115,8 @@ static int s2w_threshold = DEFAULT_S2W_X_FINAL;
 //static int s2w_max_posn = DEFAULT_S2W_X_MAX;
 
 static int s2w_swap_coord = 0;
+=======
+>>>>>>> da853a4... sweep2wake: massive update, bring on par with s2w2 except algorithm
 
 /* Read cmdline for s2w */
 static int __init read_s2w_cmdline(char *s2w)
@@ -149,12 +167,20 @@ static void sweep2wake_reset(void) {
 }
 
 /* Sweep2wake main function */
+<<<<<<< HEAD
 static void detect_sweep2wake(int sweep_coord, int sweep_height, bool st)
 {
 	int swap_temp1, swap_temp2;
 	int prev_coord = 0, next_coord = 0;
 	bool single_touch = st;
 #if S2W_DEBUG
+=======
+static void detect_sweep2wake(int x, int y, bool st)
+{
+        int prevx = 0, nextx = 0;
+        bool single_touch = st;
+#if DEBUG
+>>>>>>> da853a4... sweep2wake: massive update, bring on par with s2w2 except algorithm
         pr_info(LOGTAG"x,y(%4d,%4d) single:%s\n",
                 x, y, (single_touch) ? "true" : "false");
 #endif
@@ -235,6 +261,7 @@ static void detect_sweep2wake(int sweep_coord, int sweep_height, bool st)
 	}
 }
 
+<<<<<<< HEAD
 /****************** SYSFS INTERFACE (START) ********************/
 static ssize_t s2w_start_posn_show(struct kobject *kobj,
 	struct kobj_attribute *attr, char *buf)
@@ -370,6 +397,8 @@ static struct kobject *s2w_parameters_kobj;
 /****************** SYSFS INTERFACE (END) ********************/
 
 
+=======
+>>>>>>> da853a4... sweep2wake: massive update, bring on par with s2w2 except algorithm
 static void s2w_input_callback(struct work_struct *unused) {
 
 	detect_sweep2wake(touch_x, touch_y, true);
@@ -379,18 +408,25 @@ static void s2w_input_callback(struct work_struct *unused) {
 
 static void s2w_input_event(struct input_handle *handle, unsigned int type,
 				unsigned int code, int value) {
+<<<<<<< HEAD
 #if S2W_DEBUG
+=======
+#if DEBUG
+>>>>>>> da853a4... sweep2wake: massive update, bring on par with s2w2 except algorithm
 	pr_info("sweep2wake: code: %s|%u, val: %i\n",
 		((code==ABS_MT_POSITION_X) ? "X" :
 		(code==ABS_MT_POSITION_Y) ? "Y" :
 		(code==ABS_MT_TRACKING_ID) ? "ID" :
 		"undef"), code, value);
 #endif
+<<<<<<< HEAD
 	if (code == ABS_MT_SLOT) {
 		sweep2wake_reset();
 		return;
 	}
 
+=======
+>>>>>>> da853a4... sweep2wake: massive update, bring on par with s2w2 except algorithm
 	if (code == ABS_MT_TRACKING_ID && value == -1) {
 		sweep2wake_reset();
 		return;
@@ -414,8 +450,12 @@ static void s2w_input_event(struct input_handle *handle, unsigned int type,
 }
 
 static int input_dev_filter(struct input_dev *dev) {
+<<<<<<< HEAD
 	if (strstr(dev->name, "touch") ||
 	    strstr(dev->name, "lge_touch_core")) {
+=======
+	if (strstr(dev->name, "touch")) {
+>>>>>>> da853a4... sweep2wake: massive update, bring on par with s2w2 except algorithm
 		return 0;
 	} else {
 		return 1;
@@ -473,6 +513,7 @@ static struct input_handler s2w_input_handler = {
 	.id_table	= s2w_ids,
 };
 
+<<<<<<< HEAD
 /*
  * SYSFS stuff below here
  */
@@ -540,20 +581,108 @@ static ssize_t s2w_version_dump(struct device *dev,
 
 static DEVICE_ATTR(sweep2wake_version, (S_IWUSR|S_IRUGO),
 	s2w_version_show, s2w_version_dump);
+=======
+#ifndef CONFIG_HAS_EARLYSUSPEND
+static int lcd_notifier_callback(struct notifier_block *this,
+				unsigned long event, void *data)
+{
+	switch (event) {
+	case LCD_EVENT_ON_END:
+		scr_suspended = false;
+		break;
+	case LCD_EVENT_OFF_END:
+		scr_suspended = true;
+		break;
+	default:
+		break;
+	}
+
+	return 0;
+}
+#else
+static void s2w_early_suspend(struct early_suspend *h) {
+	scr_suspended = true;
+}
+
+static void s2w_late_resume(struct early_suspend *h) {
+	scr_suspended = false;
+}
+
+static struct early_suspend s2w_early_suspend_handler = {
+	.level = EARLY_SUSPEND_LEVEL_BLANK_SCREEN,
+	.suspend = s2w_early_suspend,
+	.resume = s2w_late_resume,
+};
+#endif
+>>>>>>> da853a4... sweep2wake: massive update, bring on par with s2w2 except algorithm
 
 /*
- * INIT / EXIT stuff below here
+ * SYSFS stuff below here
  */
+<<<<<<< HEAD
 #ifdef ANDROID_TOUCH_DECLARED
 extern struct kobject *android_touch_kobj;
 #else
 struct kobject *android_touch_kobj;
 EXPORT_SYMBOL_GPL(android_touch_kobj);
 #endif
+=======
+static ssize_t s2w_sweep2wake_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	size_t count = 0;
 
+	count += sprintf(buf, "%d\n", s2w_switch);
+
+	return count;
+}
+
+static ssize_t s2w_sweep2wake_dump(struct device *dev,
+		struct device_attribute *attr, const char *buf, size_t count)
+{
+	if (buf[0] >= '0' && buf[0] <= '2' && buf[1] == '\n')
+                if (s2w_switch != buf[0] - '0')
+		        s2w_switch = buf[0] - '0';
+
+	return count;
+}
+
+static DEVICE_ATTR(sweep2wake, (S_IWUSR|S_IRUGO),
+	s2w_sweep2wake_show, s2w_sweep2wake_dump);
+>>>>>>> da853a4... sweep2wake: massive update, bring on par with s2w2 except algorithm
+
+static ssize_t s2w_version_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	size_t count = 0;
+
+	count += sprintf(buf, "%s\n", DRIVER_VERSION);
+
+	return count;
+}
+
+static ssize_t s2w_version_dump(struct device *dev,
+		struct device_attribute *attr, const char *buf, size_t count)
+{
+	return count;
+}
+
+static DEVICE_ATTR(version, (S_IWUSR|S_IRUGO),
+	s2w_version_show, s2w_version_dump);
+
+/*
+ * INIT / EXIT stuff below here
+ */
+#ifdef S2W_ANDROID_TOUCH_DECLARED
+extern struct kobject *android_touch_kobj;
+#else
+static struct kobject *android_touch_kobj;
+EXPORT_SYMBOL_GPL(android_touch_kobj);
+#endif
 static int __init sweep2wake_init(void)
 {
 	int rc = 0;
+<<<<<<< HEAD
 	int sysfs_result;
 
 	s2w_parameters_kobj = kobject_create_and_add("s2w_parameters", kernel_kobj);
@@ -568,6 +697,8 @@ static int __init sweep2wake_init(void)
 		pr_info("%s sysfs create failed!\n", __FUNCTION__);
 		kobject_put(s2w_parameters_kobj);
 	}
+=======
+>>>>>>> da853a4... sweep2wake: massive update, bring on par with s2w2 except algorithm
 
 	sweep2wake_pwrdev = input_allocate_device();
 	if (!sweep2wake_pwrdev) {
@@ -595,7 +726,20 @@ static int __init sweep2wake_init(void)
 	if (rc)
 		pr_err("%s: Failed to register s2w_input_handler\n", __func__);
 
+<<<<<<< HEAD
 #ifndef ANDROID_TOUCH_DECLARED
+=======
+#ifndef CONFIG_HAS_EARLYSUSPEND
+	s2w_lcd_notif.notifier_call = lcd_notifier_callback;
+	if (lcd_register_client(&s2w_lcd_notif) != 0) {
+		pr_err("%s: Failed to register lcd callback\n", __func__);
+	}
+#else
+	register_early_suspend(&s2w_early_suspend_handler);
+#endif
+
+#ifndef S2W_ANDROID_TOUCH_DECLARED
+>>>>>>> da853a4... sweep2wake: massive update, bring on par with s2w2 except algorithm
 	android_touch_kobj = kobject_create_and_add("android_touch", NULL) ;
 	if (android_touch_kobj == NULL) {
 		pr_warn("%s: android_touch_kobj create_and_add failed\n", __func__);
@@ -605,6 +749,7 @@ static int __init sweep2wake_init(void)
 	if (rc) {
 		pr_warn("%s: sysfs_create_file failed for sweep2wake\n", __func__);
 	}
+<<<<<<< HEAD
 	rc = sysfs_create_file(android_touch_kobj, &dev_attr_s2w_s2sonly.attr);
 	if (rc) {
 		pr_warn("%s: sysfs_create_file failed for s2w_s2sonly\n", __func__);
@@ -612,6 +757,11 @@ static int __init sweep2wake_init(void)
 	rc = sysfs_create_file(android_touch_kobj, &dev_attr_sweep2wake_version.attr);
 	if (rc) {
 		pr_warn("%s: sysfs_create_file failed for sweep2wake_version\n", __func__);
+=======
+	rc = sysfs_create_file(android_touch_kobj, &dev_attr_version.attr);
+	if (rc) {
+		pr_warn("%s: sysfs_create_file failed for version\n", __func__);
+>>>>>>> da853a4... sweep2wake: massive update, bring on par with s2w2 except algorithm
 	}
 
 err_input_dev:
@@ -624,9 +774,18 @@ err_alloc_dev:
 
 static void __exit sweep2wake_exit(void)
 {
+<<<<<<< HEAD
 #ifndef ANDROID_TOUCH_DECLARED
 	kobject_del(android_touch_kobj);
 #endif
+=======
+#ifndef S2W_ANDROID_TOUCH_DECLARED
+	kobject_del(android_touch_kobj);
+#endif
+#ifndef CONFIG_HAS_EARLYSUSPEND
+	lcd_unregister_client(&s2w_lcd_notif);
+#endif
+>>>>>>> da853a4... sweep2wake: massive update, bring on par with s2w2 except algorithm
 	input_unregister_handler(&s2w_input_handler);
 	destroy_workqueue(s2w_input_wq);
 	input_unregister_device(sweep2wake_pwrdev);
