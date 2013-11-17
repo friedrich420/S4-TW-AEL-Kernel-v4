@@ -31,11 +31,13 @@
 static struct dsi_buf dsi_panel_tx_buf;
 static struct dsi_buf dsi_panel_rx_buf;
 
+<<<<<<< HEAD
 static struct dsi_cmd_desc *dsi_panel_on_cmds;
 static struct dsi_cmd_desc *dsi_panel_off_cmds;
 static int num_of_on_cmds;
 static int num_of_off_cmds;
 static char *on_cmds, *off_cmds;
+=======
 	mdss_dsi_cmdlist_put(ctrl, &cmdreq);
 }
 
