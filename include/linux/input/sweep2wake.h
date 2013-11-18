@@ -32,8 +32,5 @@ extern int s2w_switch, s2w_s2sonly;
 
 extern int s2w_switch;
 
-/* PowerKey setter */
-extern void sweep2wake_setdev(struct input_dev *);
-
 #endif	/* _LINUX_SWEEP2WAKE_H */
 
