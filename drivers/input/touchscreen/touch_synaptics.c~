@@ -631,12 +631,534 @@ static void touch_recover_func(struct work_struct *work_recover)
 	ts->ic_panel_type = IC7020_G2_H_PTN;
 	TOUCH_INFO_MSG("IC is 7020, H pattern, panel is G2, Firmware: %s.", fw_info->fw_version);
 
+<<<<<<< HEAD
 #if defined(ARRAYED_TOUCH_FW_BIN)
 	for (cnt = 0; cnt < sizeof(SynaFirmware)/sizeof(SynaFirmware[0]); cnt++) {
 		strncpy(fw_info->fw_image_product_id,
 				&SynaFirmware[cnt][FW_OFFSET_PRODUCT_ID], 10);
 		if (!(strncmp(fw_info->product_id,
 				fw_info->fw_image_product_id, 10)))
+=======
+	TOUCH_DEBUG_TRACE("%s: touch_ic_init int_pin %d", __func__,
+					ts->int_pin_state);
+
+	if (unlikely(ts->int_pin_state != 1)) {
+		TOUCH_ERR_MSG("WARN: Interrupt pin is low - try_count: %d]\n",
+						ts->ic_init_err_cnt);
+		goto err_out_retry;
+	}
+
+	ts->ic_init_err_cnt = 0;
+	return 0;
+
+err_out_retry:
+	ts->ic_init_err_cnt++;
+	disable_irq_nosync(ts->client->irq);
+	safety_reset(ts);
+	queue_delayed_work(synaptics_wq, &ts->work_init, msecs_to_jiffies(10));
+
+	return 0;
+
+err_out_critical:
+	ts->ic_init_err_cnt = 0;
+
+	return -1;
+}
+
+/* safety_reset
+ *
+ * 1. turn off the power.
+ * 2. turn on the power.
+ * 3. sleep (booting_delay)ms, usually 400ms(synaptics).
+ *
+ * Caller should take care of enable/disable irq
+ */
+static void safety_reset(struct synaptics_ts_data *ts)
+{
+	TOUCH_INFO_MSG(">>>safety_reset\n");
+
+	release_all_ts_event(ts);
+
+	touch_power_cntl(ts, POWER_OFF);
+	touch_power_cntl(ts, POWER_ON);
+	msleep(BOOTING_DELAY);
+
+	TOUCH_INFO_MSG("<<safety_reset\n");
+	return;
+}
+
+/* release_all_ts_event
+ *
+ * When system enters suspend-state,
+ * if user press touch-panel, release them automatically.
+ */
+static void release_all_ts_event(struct synaptics_ts_data *ts)
+{
+	int id;
+
+	for (id = 0; id < ts->pdata->max_id; id++) {
+		if (!ts->ts_data.curr_data[id].state)
+			continue;
+
+		input_mt_slot(ts->input_dev, id);
+		input_mt_report_slot_state(ts->input_dev, MT_TOOL_FINGER, 0);
+		ts->ts_data.curr_data[id].state = 0;
+	}
+
+	input_sync(ts->input_dev);
+}
+
+/* set_touch_handle / get_touch_handle
+ *
+ * Developer can save their object using 'set_touch_handle'.
+ * Also, they can restore that using 'get_touch_handle'.
+ */
+static void set_touch_handle(struct i2c_client *client, void* h_touch)
+{
+	struct synaptics_ts_data *ts = i2c_get_clientdata(client);
+	ts->h_touch = h_touch;
+}
+
+static void *get_touch_handle(struct i2c_client *client)
+{
+	struct synaptics_ts_data *ts = i2c_get_clientdata(client);
+	return ts->h_touch;
+}
+
+/* touch_i2c_read / touch_i2c_write
+ *
+ * Developer can use these fuctions to communicate with touch_device through I2C.
+ */
+static int touch_i2c_read(struct i2c_client *client, u8 reg, int len, u8 *buf)
+{
+#define SYNAPTICS_I2C_RETRY 10
+	int retry = 0;
+	struct i2c_msg msgs[] = {
+		{
+			.addr = client->addr,
+			.flags = 0,
+			.len = 1,
+			.buf = &reg,
+		},
+		{
+			.addr = client->addr,
+			.flags = I2C_M_RD,
+			.len = len,
+			.buf = buf,
+		},
+	};
+
+	for (retry = 0; retry <= SYNAPTICS_I2C_RETRY; retry++) {
+		if (i2c_transfer(client->adapter, msgs, 2) == 2)
+			break;
+		if (retry == SYNAPTICS_I2C_RETRY) {
+			if (printk_ratelimit())
+				TOUCH_ERR_MSG("transfer error\n");
+			return -EIO;
+		} else
+			msleep(10);
+	}
+
+	return 0;
+}
+
+static int touch_i2c_write(struct i2c_client *client, u8 reg, int len, u8 * buf)
+{
+	unsigned char send_buf[len + 1];
+	struct i2c_msg msgs[] = {
+		{
+			.addr = client->addr,
+			.flags = client->flags,
+			.len = len+1,
+			.buf = send_buf,
+		},
+	};
+
+	send_buf[0] = (unsigned char)reg;
+	memcpy(&send_buf[1], buf, len);
+
+	if (i2c_transfer(client->adapter, msgs, 1) < 0) {
+		if (printk_ratelimit())
+			TOUCH_ERR_MSG("transfer error\n");
+		return -EIO;
+	}
+
+	return 0;
+}
+
+static int touch_i2c_write_byte(struct i2c_client *client, u8 reg, u8 data)
+{
+	unsigned char send_buf[2];
+	struct i2c_msg msgs[] = {
+		{
+			.addr = client->addr,
+			.flags = client->flags,
+			.len = 2,
+			.buf = send_buf,
+		},
+	};
+
+	send_buf[0] = (unsigned char)reg;
+	send_buf[1] = (unsigned char)data;
+
+	if (i2c_transfer(client->adapter, msgs, 1) < 0) {
+		if (printk_ratelimit())
+			TOUCH_ERR_MSG("transfer error\n");
+		return -EIO;
+	}
+
+	return 0;
+}
+
+/* wrapper function for i2c communication - except defalut page
+ * if you have to select page for reading or writing, then using this wrapper function */
+static int synaptics_ts_page_data_read(struct i2c_client *client, u8 page, u8 reg, int size, u8 *data)
+{
+	if (unlikely(touch_i2c_write_byte(client, PAGE_SELECT_REG, page) < 0)) {
+		TOUCH_ERR_MSG("PAGE_SELECT_REG write fail\n");
+		return -EIO;
+	}
+
+	if (unlikely(touch_i2c_read(client, reg, size, data) < 0)) {
+		TOUCH_ERR_MSG("[%dP:%d]register read fail\n", page, reg);
+		return -EIO;
+	}
+
+	if (unlikely(touch_i2c_write_byte(client, PAGE_SELECT_REG, DEFAULT_PAGE) < 0)) {
+		TOUCH_ERR_MSG("PAGE_SELECT_REG write fail\n");
+		return -EIO;
+	}
+
+	return 0;
+}
+
+static int synaptics_ts_page_data_write(struct i2c_client *client, u8 page, u8 reg, int size, u8 *data)
+{
+	if (unlikely(touch_i2c_write_byte(client, PAGE_SELECT_REG, page) < 0)) {
+		TOUCH_ERR_MSG("PAGE_SELECT_REG write fail\n");
+		return -EIO;
+	}
+
+	if (unlikely(touch_i2c_write(client, reg, size, data) < 0)) {
+		TOUCH_ERR_MSG("[%dP:%d]register read fail\n", page, reg);
+		return -EIO;
+	}
+
+	if (unlikely(touch_i2c_write_byte(client, PAGE_SELECT_REG, DEFAULT_PAGE) < 0)) {
+		TOUCH_ERR_MSG("PAGE_SELECT_REG write fail\n");
+		return -EIO;
+	}
+
+	return 0;
+}
+
+static int synaptics_ts_page_data_write_byte(struct i2c_client *client, u8 page, u8 reg, u8 data)
+{
+	if (unlikely(touch_i2c_write_byte(client, PAGE_SELECT_REG, page) < 0)) {
+		TOUCH_ERR_MSG("PAGE_SELECT_REG write fail\n");
+		return -EIO;
+	}
+
+	if (unlikely(touch_i2c_write_byte(client, reg, data) < 0)) {
+		TOUCH_ERR_MSG("[%dP:%d]register write fail\n", page, reg);
+		return -EIO;
+	}
+
+	if (unlikely(touch_i2c_write_byte(client, PAGE_SELECT_REG, DEFAULT_PAGE) < 0)) {
+		TOUCH_ERR_MSG("PAGE_SELECT_REG write fail\n");
+		return -EIO;
+	}
+
+	return 0;
+}
+
+static inline int get_highest_id(u32 fs)
+{
+	int id = 10;
+	int tmp = 0x000C0000;
+
+	while (!(fs & tmp)) {
+		id--;
+		tmp >>= 2;
+	}
+
+	return id;
+}
+
+static int synaptics_ts_get_data(struct i2c_client *client, struct t_data* data)
+{
+	struct synaptics_ts_data *ts =
+			(struct synaptics_ts_data *)get_touch_handle(client);
+	int id;
+	u8 buf;
+	u32 finger_status = 0;
+
+	TOUCH_DEBUG_TRACE("%s\n", __func__);
+
+	if (unlikely(touch_i2c_read(client, DEVICE_STATUS_REG,
+			sizeof(ts->ts_data.interrupt_status_reg),
+			&ts->ts_data.device_status_reg) < 0)) {
+		TOUCH_ERR_MSG("DEVICE_STATUS_REG read fail\n");
+		goto err_synaptics_getdata;
+	}
+
+	/* ESD damage check */
+	if ((ts->ts_data.device_status_reg & DEVICE_FAILURE_MASK) == DEVICE_FAILURE_MASK) {
+		TOUCH_ERR_MSG("ESD damage occured. Reset Touch IC\n");
+		goto err_synaptics_device_damage;
+	}
+
+	/* Internal reset check */
+	if (((ts->ts_data.device_status_reg & DEVICE_STATUS_UNCONFIGURED) >> 7) == 1) {
+		TOUCH_ERR_MSG("Touch IC resetted internally. Reconfigure register setting\n");
+		goto err_synaptics_device_damage;
+	}
+
+	if (unlikely(touch_i2c_read(client, INTERRUPT_STATUS_REG,
+			sizeof(ts->ts_data.interrupt_status_reg),
+			&ts->ts_data.interrupt_status_reg) < 0)) {
+		TOUCH_ERR_MSG("INTERRUPT_STATUS_REG read fail\n");
+		goto err_synaptics_getdata;
+	}
+
+	TOUCH_DEBUG_GET_DATA("%s: Interrupt_status: 0x%x\n", __func__,
+						ts->ts_data.interrupt_status_reg);
+
+	/* IC bug Exception handling - Interrupt status reg is 0 when interrupt occur */
+	if (ts->ts_data.interrupt_status_reg == 0 || unlikely(atomic_read(&ts->device_init) != 1)) {
+		TOUCH_ERR_MSG("Interrupt_status reg is 0. -> ignore\n");
+		goto err_synaptics_ignore;
+	}
+
+	/* Because of ESD damage... */
+	if (unlikely(ts->ts_data.interrupt_status_reg & INTERRUPT_MASK_FLASH)) {
+		TOUCH_ERR_MSG("Impossible Interrupt\n");
+		goto err_synaptics_device_damage;
+	}
+
+	/* Finger */
+	if (likely(ts->ts_data.interrupt_status_reg & INTERRUPT_MASK_ABS0)) {
+		if (unlikely(touch_i2c_read(client, FINGER_STATE_REG,
+				sizeof(fdata.finger_status_reg),
+				fdata.finger_status_reg) < 0)) {
+			TOUCH_ERR_MSG("FINGER_STATE_REG read fail\n");
+			goto err_synaptics_getdata;
+		}
+
+		finger_status = fdata.finger_status_reg[0] |
+			fdata.finger_status_reg[1] << 8 |
+			(fdata.finger_status_reg[2] & 0xF) << 16;
+
+		TOUCH_DEBUG_GET_DATA("%s: Finger_status: 0x%x, 0x%x, 0x%x\n",
+					__func__,
+					fdata.finger_status_reg[0],
+					fdata.finger_status_reg[1],
+					fdata.finger_status_reg[2]);
+
+		if (finger_status) {
+			int max_id = get_highest_id(finger_status);
+			if (unlikely(touch_i2c_read(ts->client,
+					FINGER_DATA_REG_START,
+					BYTES_PER_FINGER * max_id,
+					fdata.finger_reg[0]) < 0)) {
+				TOUCH_ERR_MSG("FINGER_STATE_REG read fail\n");
+				goto err_synaptics_getdata;
+			}
+		}
+
+		for (id = 0; id < ts->pdata->max_id; id++) {
+			switch (((finger_status >> (id*2)) & 0x3)) {
+			case FINGER_STATE_PRESENT_VALID:
+				data[id].state = ABS_PRESS;
+				data[id].x_position = TS_SNTS_GET_X_POSITION(
+					fdata.finger_reg[id][REG_X_POSITION],
+					fdata.finger_reg[id][REG_YX_POSITION]);
+				data[id].y_position = TS_SNTS_GET_Y_POSITION(fdata.finger_reg[id][REG_Y_POSITION], fdata.finger_reg[id][REG_YX_POSITION]);
+				data[id].width_major = TS_SNTS_GET_WIDTH_MAJOR(fdata.finger_reg[id][REG_WY_WX]);
+				data[id].width_minor = TS_SNTS_GET_WIDTH_MINOR(fdata.finger_reg[id][REG_WY_WX]);
+				data[id].pressure = TS_SNTS_GET_PRESSURE(fdata.finger_reg[id][REG_Z]);
+
+				TOUCH_DEBUG_GET_DATA("[%d] pos(%4d,%4d) "
+						"w_m[%2d] w_n[%2d] p[%2d]\n",
+						id,
+						data[id].x_position,
+						data[id].y_position,
+						data[id].width_major,
+						data[id].width_minor,
+						data[id].pressure);
+				break;
+
+			case FINGER_STATE_NO_PRESENT:
+				if (data[id].state == ABS_PRESS)
+					data[id].state = ABS_RELEASE;
+				break;
+
+			default:
+				/* Do nothing including inacurate data */
+				break;
+			}
+
+		}
+	}
+
+	/* Palm check */
+	if (unlikely(touch_i2c_read(client, TWO_D_EXTEND_STATUS, 1, &buf) < 0)) {
+	       TOUCH_ERR_MSG("TWO_D_EXTEND_STATUS read fail\n");
+	       goto err_synaptics_getdata;
+	}
+	ts->ts_data.palm = buf & 0x2;
+
+	return 0;
+
+err_synaptics_ignore:
+	return -EINTR;
+
+err_synaptics_device_damage:
+err_synaptics_getdata:
+	return -EIO;
+}
+
+static int read_page_description_table(struct i2c_client *client)
+{
+	struct synaptics_ts_data *ts =
+			(struct synaptics_ts_data *)get_touch_handle(client);
+	struct function_descriptor buffer;
+	unsigned short u_address = 0;
+	unsigned short page_num = 0;
+
+	TOUCH_DEBUG_TRACE("%s\n", __func__);
+
+	memset(&buffer, 0x0, sizeof(struct function_descriptor));
+	memset(&ts->common_fc, 0x0, sizeof(struct ts_ic_function));
+	memset(&ts->finger_fc, 0x0, sizeof(struct ts_ic_function));
+	memset(&ts->button_fc, 0x0, sizeof(struct ts_ic_function));
+	memset(&ts->analog_fc, 0x0, sizeof(struct ts_ic_function));
+	memset(&ts->flash_fc, 0x0, sizeof(struct ts_ic_function));
+
+	for (page_num = 0; page_num < PAGE_MAX_NUM; page_num++) {
+		if (unlikely(touch_i2c_write_byte(client,
+					PAGE_SELECT_REG, page_num) < 0)) {
+			TOUCH_ERR_MSG("PAGE_SELECT_REG write fail\n");
+			return -EIO;
+		}
+
+		for (u_address = DESCRIPTION_TABLE_START; u_address > 10;
+			u_address -= sizeof(struct function_descriptor)) {
+
+			if (unlikely(touch_i2c_read(client,
+					u_address, sizeof(buffer),
+					(unsigned char *)&buffer) < 0)) {
+				TOUCH_ERR_MSG("RMI4 Function Descriptor read fail\n");
+				return -EIO;
+			}
+
+			if (buffer.id == 0)
+				break;
+
+			TOUCH_DEBUG_TRACE("%s: buffer.id=[%x], "
+					"[%x][%x][%x][%x][%x][%x]\n",
+					__func__,
+					buffer.id,
+					buffer.query_base, buffer.command_base,
+					buffer.control_base, buffer.data_base,
+					buffer.int_source_count, buffer.id);
+
+			switch (buffer.id) {
+			case RMI_DEVICE_CONTROL:
+				ts->common_fc.dsc = buffer;
+				ts->common_fc.function_page = page_num;
+				break;
+			case TOUCHPAD_SENSORS:
+				ts->finger_fc.dsc = buffer;
+				ts->finger_fc.function_page = page_num;
+				break;
+			case CAPACITIVE_BUTTON_SENSORS:
+				ts->button_fc.dsc = buffer;
+				ts->button_fc.function_page = page_num;
+				break;
+			case ANALOG_CONTROL:
+				ts->analog_fc.dsc = buffer;
+				ts->analog_fc.function_page = page_num;
+				break;
+			case FLASH_MEMORY_MANAGEMENT:
+				ts->flash_fc.dsc = buffer;
+				ts->flash_fc.function_page = page_num;
+			default:
+				break;
+			}
+		}
+	}
+
+	if (unlikely(touch_i2c_write_byte(client, PAGE_SELECT_REG, 0x00) < 0)) {
+		TOUCH_ERR_MSG("PAGE_SELECT_REG write fail\n");
+		return -EIO;
+	}
+
+	if (ts->common_fc.dsc.id == 0 || ts->finger_fc.dsc.id == 0
+		|| ts->analog_fc.dsc.id == 0 || ts->flash_fc.dsc.id == 0) {
+		TOUCH_ERR_MSG("common/finger/analog/flash are not initiailized\n");
+		return -EPERM;
+	}
+
+	TOUCH_DEBUG_BASE_INFO("%s: common[%dP:0x%02x] finger[%dP:0x%02x] "
+			"button[%dP:0x%02x] analog[%dP:0x%02x] "
+			"flash[%dP:0x%02x]\n", __func__,
+			ts->common_fc.function_page, ts->common_fc.dsc.id,
+			ts->finger_fc.function_page, ts->finger_fc.dsc.id,
+			ts->button_fc.function_page, ts->button_fc.dsc.id,
+			ts->analog_fc.function_page, ts->analog_fc.dsc.id,
+			ts->flash_fc.function_page, ts->flash_fc.dsc.id);
+
+	return 0;
+}
+
+static int get_ic_info(struct synaptics_ts_data *ts, struct synaptics_ts_fw_info *fw_info)
+{
+	u8 device_status = 0;
+	u8 flash_control = 0;
+	int i;
+
+	read_page_description_table(ts->client);
+
+	memset(&ts->fw_info, 0, sizeof(struct synaptics_ts_fw_info));
+
+	if (unlikely(touch_i2c_read(ts->client, FW_REVISION_REG,
+			sizeof(ts->fw_info.fw_rev), &ts->fw_info.fw_rev) < 0)) {
+		TOUCH_ERR_MSG("FW_REVISION_REG read fail\n");
+		return -EIO;
+	}
+
+	if (unlikely(touch_i2c_read(ts->client, MANUFACTURER_ID_REG,
+			sizeof(ts->fw_info.manufacturer_id),
+					&ts->fw_info.manufacturer_id) < 0)) {
+		TOUCH_ERR_MSG("MANUFACTURER_ID_REG read fail\n");
+		return -EIO;
+	}
+
+	if (unlikely(touch_i2c_read(ts->client, PRODUCT_ID_REG,
+			sizeof(ts->fw_info.product_id) - 1,
+					ts->fw_info.product_id) < 0)) {
+		TOUCH_ERR_MSG("PRODUCT_ID_REG read fail\n");
+		return -EIO;
+	}
+
+	if (unlikely(touch_i2c_read(ts->client, FLASH_CONFIG_ID_REG,
+			sizeof(ts->fw_info.config_id) - 1,
+					ts->fw_info.config_id) < 0)) {
+		TOUCH_ERR_MSG("FLASH_CONFIG_ID_REG read fail\n");
+		return -EIO;
+	}
+
+	snprintf(fw_info->ic_fw_identifier, sizeof(fw_info->ic_fw_identifier),
+		"%s - %d", ts->fw_info.product_id, ts->fw_info.manufacturer_id);
+
+	for (i = 0; i < sizeof(SynaFirmware)/sizeof(SynaFirmware[0]); i++) {
+		if (!strncmp(ts->fw_info.product_id,
+				&SynaFirmware[i][FW_OFFSET_PRODUCT_ID],
+				sizeof(ts->fw_info.product_id) - 1)) {
+			ts->fw_info.fw_start = (unsigned char*)SynaFirmware[i];
+			ts->fw_info.fw_size = sizeof(SynaFirmware[i]);
+>>>>>>> ca4ca11... touch_synaptics: i2c_read: auto retry 10 times before erroring out
 			break;
 	}
 	fw_info->fw_start = (unsigned char *)&SynaFirmware[cnt][0];
@@ -1216,8 +1738,6 @@ static int synaptics_parse_dt(struct device *dev, struct touch_platform_data *pd
 			TOUCH_ERR_MSG("TWO_D_REPORTING_MODE write fail\n");
 			return -EIO;
 		}
-
-<<<<<<< HEAD
 		if (unlikely(touch_i2c_write_byte(client, DELTA_X_THRESH_REG,
 				ts->pdata->role->delta_pos_threshold) < 0)) {
 			TOUCH_ERR_MSG("DELTA_X_THRESH_REG write fail\n");
@@ -1229,11 +1749,10 @@ static int synaptics_parse_dt(struct device *dev, struct touch_platform_data *pd
 			return -EIO;
 		}
 	}
-=======
+
 #ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE_PREVENT_SLEEP
 	if (device_may_wakeup(&ts->client->dev))
 		disable_irq_wake(ts->client->irq);
->>>>>>> c330daa... touch_synaptics: bring on par with touch_synaptics_ds5
 #endif
 
 	if (unlikely(touch_i2c_read(client, INTERRUPT_STATUS_REG, 1, &buf) < 0)) {
@@ -1241,9 +1760,7 @@ static int synaptics_parse_dt(struct device *dev, struct touch_platform_data *pd
 		return -EIO;	/* it is critical problem because interrupt will not occur. */
 	}
 
-<<<<<<< HEAD
 #ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE
-=======
 	ts->curr_resume_state = 0;
 
 	if (ts->fw_info.fw_upgrade.is_downloading == UNDER_DOWNLOADING) {
@@ -1251,12 +1768,10 @@ static int synaptics_parse_dt(struct device *dev, struct touch_platform_data *pd
 		return 0;
 	}
 
->>>>>>> c330daa... touch_synaptics: bring on par with touch_synaptics_ds5
 #ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE_PREVENT_SLEEP
 	if (s2w_switch == 0)
 #endif
 	{
-<<<<<<< HEAD
 	ts->curr_resume_state = 0;
 
 	if (unlikely(touch_i2c_read(client, FINGER_STATE_REG,
@@ -1269,9 +1784,7 @@ static int synaptics_parse_dt(struct device *dev, struct touch_platform_data *pd
 
 	ts->is_probed = 1;
 	disable_irq(ts->client->irq);
-=======
 		disable_irq(ts->client->irq);
->>>>>>> c330daa... touch_synaptics: bring on par with touch_synaptics_ds5
 
 	cancel_delayed_work_sync(&ts->work_init);
 	release_all_ts_event(ts);
