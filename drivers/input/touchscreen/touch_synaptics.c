@@ -1216,7 +1216,6 @@ static int synaptics_parse_dt(struct device *dev, struct touch_platform_data *pd
 			TOUCH_ERR_MSG("TWO_D_REPORTING_MODE write fail\n");
 			return -EIO;
 		}
-
 		if (unlikely(touch_i2c_write_byte(client, DELTA_X_THRESH_REG,
 				ts->pdata->role->delta_pos_threshold) < 0)) {
 			TOUCH_ERR_MSG("DELTA_X_THRESH_REG write fail\n");
@@ -1228,6 +1227,10 @@ static int synaptics_parse_dt(struct device *dev, struct touch_platform_data *pd
 			return -EIO;
 		}
 	}
+
+#ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE_PREVENT_SLEEP
+	if (device_may_wakeup(&ts->client->dev))
+		disable_irq_wake(ts->client->irq);
 #endif
 
 	if (unlikely(touch_i2c_read(client, INTERRUPT_STATUS_REG, 1, &buf) < 0)) {
@@ -1236,6 +1239,13 @@ static int synaptics_parse_dt(struct device *dev, struct touch_platform_data *pd
 	}
 
 #ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE
+	ts->curr_resume_state = 0;
+
+	if (ts->fw_info.fw_upgrade.is_downloading == UNDER_DOWNLOADING) {
+		TOUCH_INFO_MSG("stop is not executed\n");
+		return 0;
+	}
+
 #ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE_PREVENT_SLEEP
 	if (s2w_switch == 0)
 #endif
@@ -1252,6 +1262,7 @@ static int synaptics_parse_dt(struct device *dev, struct touch_platform_data *pd
 
 	ts->is_probed = 1;
 	disable_irq(ts->client->irq);
+		disable_irq(ts->client->irq);
 
 	cancel_delayed_work_sync(&ts->work_init);
 	release_all_ts_event(ts);
@@ -1589,6 +1600,7 @@ int synaptics_ts_ic_ctrl(struct i2c_client *client, u8 code, u16 value)
 	ret = request_threaded_irq(client->irq, NULL, touch_irq_handler,
 #ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE_PREVENT_SLEEP
 			IRQF_TRIGGER_FALLING | IRQF_ONESHOT | IRQF_NO_SUSPEND, client->name, ts);
+	device_init_wakeup(&client->dev, 1);
 #else
 			IRQF_TRIGGER_FALLING | IRQF_ONESHOT, client->name, ts);
 #endif
