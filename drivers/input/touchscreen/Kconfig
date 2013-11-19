@@ -1044,6 +1044,7 @@ config TOUCHSCREEN_PREVENT_SLEEP
 	This disables the sleep function of modified touchscreen drivers.
 
 config TOUCHSCREEN_SWEEP2WAKE
+<<<<<<< HEAD
         tristate "Sweep2Wake for touchscreens"
 	select TOUCHSCREEN_SWEEP2WAKE_PREVENT_SLEEP
         default y
@@ -1051,8 +1052,21 @@ config TOUCHSCREEN_SWEEP2WAKE
 config TOUCHSCREEN_SWEEP2WAKE_PREVENT_SLEEP
         bool "Inihibit sleep on modified touchscreen drivers"
 	default y
+=======
+	tristate "Sweep2Wake for touchscreens"
+	select TOUCHSCREEN_PREVENT_SLEEP
+	default n
+
+config TOUCHSCREEN_DOUBLETAP2WAKE
+	tristate "DoubleTap2Wake for touchscreens"
+	select TOUCHSCREEN_PREVENT_SLEEP
+	default n
+
+config TOUCHSCREEN_PREVENT_SLEEP
+	bool "Inihibit sleep on modified touchscreen drivers"
+	default n
+>>>>>>> 028988c... sweep2wake/doubletap2wake/touchscreen: Prepare for dt2w
 	help
-	  This allows sweep2wake to disable the sleep function of modified
-	  touchscreen drivers.
+	  This disables the sleep function of modified touchscreen drivers.
 
 endif
