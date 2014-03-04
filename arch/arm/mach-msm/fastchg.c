@@ -5,6 +5,11 @@
  * Adapted for 9505 from Note 3:
  * Paul Reioux <reioux@gmail.com>
  *
+<<<<<<< HEAD
+=======
+ * Modded by ktoonsez from Jean-Pierre and Faux's original implementation:
+ *
+>>>>>>> 71ca669... New fastcharge for qcom S4 adapted from Jean-Pierre and Paul Reioux
  * This software is licensed under the terms of the GNU General Public
  * License version 2, as published by the Free Software Foundation, and
  * may be copied, distributed, and modified under those terms.
@@ -39,7 +44,11 @@
  *   0 - disabled - allow anything up to 2.1A/h to be used as AC / USB custom current
  *   1 - enabled  - behaviour as described above (default)
  *
+<<<<<<< HEAD
  * /sys/kernel/fast_charge/ac_leves (ro)
+=======
+ * /sys/kernel/fast_charge/ac_levels (ro)
+>>>>>>> 71ca669... New fastcharge for qcom S4 adapted from Jean-Pierre and Paul Reioux
  *
  *   display available levels for AC (for failsafe enabled mode)
  *
@@ -125,8 +134,13 @@ static ssize_t ac_charge_level_store(struct kobject *kobj,
 
 		switch (new_ac_charge_level) {
 			case AC_CHARGE_1000:
+<<<<<<< HEAD
 			case AC_CHARGE_1300:
 			case AC_CHARGE_1600:
+=======
+			case AC_CHARGE_1450:
+			case AC_CHARGE_1900:
+>>>>>>> 71ca669... New fastcharge for qcom S4 adapted from Jean-Pierre and Paul Reioux
 				ac_charge_level = new_ac_charge_level;
 				return count;
 			default:
@@ -176,7 +190,11 @@ static ssize_t usb_charge_level_store(struct kobject *kobj,
 		switch (new_usb_charge_level) {
 			case USB_CHARGE_460:
 			case USB_CHARGE_700:
+<<<<<<< HEAD
 			case USB_CHARGE_900:
+=======
+			case USB_CHARGE_1000:
+>>>>>>> 71ca669... New fastcharge for qcom S4 adapted from Jean-Pierre and Paul Reioux
 				usb_charge_level = new_usb_charge_level;
 				return count;
 			default:
@@ -256,7 +274,11 @@ static ssize_t info_show(struct kobject *kobj,
 {
 	return sprintf(
 		buf,
+<<<<<<< HEAD
 		"Forced Fast Charge for Samsung Note 3 %s\n\n"
+=======
+		"Forced Fast Charge for Samsung Galaxy S4 Qualcomm %s\n\n"
+>>>>>>> 71ca669... New fastcharge for qcom S4 adapted from Jean-Pierre and Paul Reioux
 		"Fast charge mode : %s\n"
 		"Custom  AC level : %dmA/h\n"
 		"Custom USB level : %dmA/h\n"
@@ -314,8 +336,13 @@ int force_fast_charge_init(void)
 
 	/* Forced fast charge disabled by default */
 	force_fast_charge = FAST_CHARGE_DISABLED;
+<<<<<<< HEAD
 	/* Default AC charge level to 1000mA/h    */
 	ac_charge_level   = AC_CHARGE_1000;
+=======
+	/* Default AC charge level to 1900mA/h    */
+	ac_charge_level   = AC_CHARGE_1900;
+>>>>>>> 71ca669... New fastcharge for qcom S4 adapted from Jean-Pierre and Paul Reioux
 	/* Default USB charge level to 460mA/h    */
 	usb_charge_level  = USB_CHARGE_460;
 	/* Allow only values in list by default   */
@@ -350,4 +377,7 @@ MODULE_AUTHOR("Jean-Pierre Rasquin <yank555.lu@gmail.com>");
 MODULE_AUTHOR("Paul Reioux <reioux@gmail.com>");
 MODULE_DESCRIPTION("Fast Charge Hack for Android");
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 71ca669... New fastcharge for qcom S4 adapted from Jean-Pierre and Paul Reioux

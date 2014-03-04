@@ -27,6 +27,14 @@
 #define SIOP_INPUT_LIMIT_CURRENT 1200
 #define SIOP_CHARGING_LIMIT_CURRENT 1000
 
+<<<<<<< HEAD
+=======
+extern void send_cable_state(unsigned int state);
+extern void send_cable_state_kt(unsigned int state);
+int gwc_w_state = 0;
+bool ktoonservative_is_active_chrgW = false;
+
+>>>>>>> 71ca669... New fastcharge for qcom S4 adapted from Jean-Pierre and Paul Reioux
 struct max77693_charger_data {
 	struct max77693_dev	*max77693;
 
@@ -747,6 +755,12 @@ static int sec_chg_set_property(struct power_supply *psy,
 	const int wpc_charging_current = charger->pdata->charging_current[
 		POWER_SUPPLY_TYPE_WIRELESS].input_current_limit;
 
+<<<<<<< HEAD
+=======
+	/* check and unlock */
+	check_charger_unlock_state(charger);
+
+>>>>>>> 71ca669... New fastcharge for qcom S4 adapted from Jean-Pierre and Paul Reioux
 	switch (psp) {
 	case POWER_SUPPLY_PROP_STATUS:
 		charger->status = val->intval;
@@ -1081,6 +1095,12 @@ static void wpc_detect_work(struct work_struct *work)
 				POWER_SUPPLY_PROP_ONLINE, value);
 		pr_info("%s: wpc activated, set V_INT as PN\n",
 				__func__);
+<<<<<<< HEAD
+=======
+		send_cable_state(10);
+		if (ktoonservative_is_active_chrgW)
+			send_cable_state_kt(10);
+>>>>>>> 71ca669... New fastcharge for qcom S4 adapted from Jean-Pierre and Paul Reioux
 	} else if (wc_w_state == 0) {
 		if (!chg_data->is_charging)
 			max77693_set_charger_state(chg_data, true);
