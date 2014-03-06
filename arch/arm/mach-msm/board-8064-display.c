@@ -28,6 +28,22 @@
 #include "devices.h"
 #include "board-8064.h"
 
+<<<<<<< HEAD
+=======
+//KT Specifics
+static bool ktoonservative_is_activef = false;
+extern void set_screen_on_off_mhz(bool onoff);
+extern void set_screen_on_off_flag(bool onoff);
+extern void set_screen_on_off_flaghk(bool onoff);
+extern void screen_is_on_relay_kt(bool state);
+extern void check_prox_value_trig(bool trig);
+
+void ktoonservative_is_activebd(bool val)
+{
+	ktoonservative_is_activef = val;
+}
+
+>>>>>>> a47bf12... Add s2w, d2w, w2w and p2w
 #ifdef CONFIG_FB_MSM_TRIPLE_BUFFER
 #if defined(CONFIG_FB_MSM_MIPI_SAMSUNG_OLED_VIDEO_HD_PT_PANEL)
 /* prim = 1280 x 736 x 3(bpp) x 3(pages) */
@@ -872,6 +888,15 @@ static int mipi_panel_power_oled(int enable)
 			return -ENODEV;
 		}
 #endif
+<<<<<<< HEAD
+=======
+		set_screen_on_off_mhz(true);
+		set_screen_on_off_flag(true);
+		set_screen_on_off_flaghk(true);
+		check_prox_value_trig(false);
+		if (ktoonservative_is_activef)
+			screen_is_on_relay_kt(true);
+>>>>>>> a47bf12... Add s2w, d2w, w2w and p2w
 	} else {
 
 		pr_info("[lcd] PANEL OFF\n");
@@ -902,6 +927,16 @@ static int mipi_panel_power_oled(int enable)
 			pr_err("disable reg_L30 failed, rc=%d\n", rc);
 			return -ENODEV;
 		}
+<<<<<<< HEAD
+=======
+		set_screen_on_off_mhz(false);
+		set_screen_on_off_flag(false);
+		set_screen_on_off_flaghk(false);
+		check_prox_value_trig(true);
+		if (ktoonservative_is_activef)
+			screen_is_on_relay_kt(false);
+		//pr_alert("KT_RELAY_CALL  FROM SCREEN\n");
+>>>>>>> a47bf12... Add s2w, d2w, w2w and p2w
 	}
 
 	return rc;
