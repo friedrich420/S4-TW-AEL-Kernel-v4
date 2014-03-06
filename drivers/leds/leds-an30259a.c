@@ -168,6 +168,36 @@ static struct leds_control {
 
 extern struct class *sec_class;
 struct device *led_dev;
+<<<<<<< HEAD
+=======
+int led_enable_fade = 0;
+int led_enable_fade_charging = 0;
+u8 led_intensity = 0;
+
+unsigned int led_time_on = 0;		//If greater than ZERO override the ROMs LED ON LENGTH in ms
+unsigned int led_time_off = 0;		//If greater than ZERO override the ROMs LED OFF LENGTH in ms
+u8 led_step_speed1 = 1;			//Set bitwise value for fade effect steps1
+u8 led_step_speed2 = 1;			//Set bitwise value for fade effect steps2
+u8 led_step_speed3 = 1;			//Set bitwise value for fade effect steps3
+u8 led_step_speed4 = 1;			//Set bitwise value for fade effect steps4
+u8 led_step_bit_shift = 4;		//Set bitwise value for fade effect steps4
+int led_block_leds_time_start = -1;
+int led_block_leds_time_stop = -1;
+int led_always_disable = 0;
+
+static bool block_leds_not_blocking = false;
+static bool block_leds_check_allowed = true;
+static int block_leds_saved_mode = -1;
+static unsigned int block_leds_saved_delay_on_time[3];
+static unsigned int block_leds_saved_delay_off_time[3];
+static u8 block_leds_saved_brightness[3];
+static int led_debug_enable = 0;
+
+static void an30259a_start_led_pattern(int mode);
+static void an30259a_set_led_blink(enum an30259a_led_enum led, unsigned int delay_on_time, unsigned int delay_off_time, u8 brightness);
+extern void notif_wakelock_forwake_funcs(bool state);
+
+>>>>>>> a47bf12... Add s2w, d2w, w2w and p2w
 /*path : /sys/class/sec/led/led_pattern*/
 /*path : /sys/class/sec/led/led_blink*/
 /*path : /sys/class/sec/led/led_brightness*/
@@ -347,7 +377,25 @@ static void an30259a_start_led_pattern(int mode)
 	struct i2c_client *client;
 	struct work_struct *reset = 0;
 	client = b_client;
+<<<<<<< HEAD
 
+=======
+	
+	if (block_leds_check_allowed)
+	{
+		if (!check_restrictions())
+		{
+			if (led_debug_enable) pr_alert("SAVED LED MODE - %d", mode);
+			block_leds_saved_mode = mode;
+			return;
+		}
+	}
+	if (mode == LED_OFF || mode == POWERING || mode == CHARGING)
+		notif_wakelock_forwake_funcs(false);
+	else
+		notif_wakelock_forwake_funcs(true);
+		
+>>>>>>> a47bf12... Add s2w, d2w, w2w and p2w
 	if (mode > POWERING)
 		return;
 	/* Set all LEDs Off */
@@ -456,6 +504,13 @@ static void an30259a_set_led_blink(enum an30259a_led_enum led,
 		prev_delay_off_time[led] = delay_off_time;
 		prev_brightness[led] = brightness;
 	}
+<<<<<<< HEAD
+=======
+	if (brightness == LED_OFF)
+		notif_wakelock_forwake_funcs(false);
+	else
+		notif_wakelock_forwake_funcs(true);
+>>>>>>> a47bf12... Add s2w, d2w, w2w and p2w
 
 	if (brightness == LED_OFF) {
 		leds_on(led, false, false, brightness);
