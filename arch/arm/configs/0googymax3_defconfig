@@ -1,5 +1,6 @@
 CONFIG_LOCALVERSION="-GoogyMax3-v1.0.2"
 # CONFIG_LOCALVERSION_AUTO is not set
+<<<<<<< HEAD
 
 # GoogyMax3
 CONFIG_ASYNC_FSYNC=y
@@ -51,6 +52,9 @@ CONFIG_MSM_KGSL_SIMPLE_GOV=y
 =======
 >>>>>>> 341529b... fs: add dynamic fsync (faux123)
 
+=======
+CONFIG_ASYNC_FSYNC=y
+>>>>>>> 8f02c29... Asynchronous Fsync: initial extraction of Async Fsync from HTC
 # RTCC
 CONFIG_SWAP=y
 CONFIG_ZRAM=y
