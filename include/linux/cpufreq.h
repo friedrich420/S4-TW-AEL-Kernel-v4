@@ -450,6 +450,7 @@ extern struct cpufreq_governor cpufreq_gov_abyssplugv2;
 #elif defined(CONFIG_CPU_FREQ_DEFAULT_GOV_INTELLIACTIVE)
 extern struct cpufreq_governor cpufreq_gov_intelliactive;
 #define CPUFREQ_DEFAULT_GOVERNOR        (&cpufreq_gov_intelliactive)
+<<<<<<< HEAD
 #elif defined(CONFIG_CPU_FREQ_DEFAULT_GOV_ONDEMANDPLUS)
 extern struct cpufreq_governor cpufreq_gov_ondemandplus;
 #define CPUFREQ_DEFAULT_GOVERNOR	(&cpufreq_gov_ondemandplus)
@@ -462,6 +463,12 @@ extern struct cpufreq_governor cpufreq_gov_darkness;
 #elif defined(CONFIG_CPU_FREQ_DEFAULT_GOV_ALUCARD)
 extern struct cpufreq_governor cpufreq_gov_alucard;
 #define CPUFREQ_DEFAULT_GOVERNOR (&cpufreq_gov_alucard)
+=======
+#elif defined(CONFIG_CPU_FREQ_DEFAULT_GOV_INTELLIDEMAND)
+extern struct cpufreq_governor cpufreq_gov_intellidemand;
+#define CPUFREQ_DEFAULT_GOVERNOR        (&cpufreq_gov_intellidemand)
+
+>>>>>>> 4575069... cpufreq: add intellidemand governor (thx faux123)
 #endif
 
 
