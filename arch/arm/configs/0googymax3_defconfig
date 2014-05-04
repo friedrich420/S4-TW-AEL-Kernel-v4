@@ -46,7 +46,10 @@ CONFIG_DEFAULT_CUBIC=y
 # CONFIG_DEFAULT_RENO is not set
 CONFIG_DEFAULT_TCP_CONG="cubic"
 CONFIG_DYNAMIC_FSYNC=y
+<<<<<<< HEAD
 CONFIG_MSM_KGSL_SIMPLE_GOV=y
+=======
+>>>>>>> 341529b... fs: add dynamic fsync (faux123)
 
 # RTCC
 CONFIG_SWAP=y

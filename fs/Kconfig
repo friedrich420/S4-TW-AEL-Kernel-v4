@@ -290,4 +290,18 @@ endif # NETWORK_FILESYSTEMS
 source "fs/nls/Kconfig"
 source "fs/dlm/Kconfig"
 
+<<<<<<< HEAD
+=======
+config ASYNC_FSYNC
+	bool
+	string "asynchronous fsync"
+	default y
+
+config DYNAMIC_FSYNC
+	bool "dynamic file sync control"
+	default n
+	help
+	  An experimental file sync control using Android's early suspend / late resume drivers
+
+>>>>>>> 341529b... fs: add dynamic fsync (faux123)
 endmenu
