@@ -20,6 +20,7 @@
 #define OVERCLOCK_EXTRA_FREQS	0
 #endif
 
+<<<<<<< HEAD
 #ifdef CONFIG_LOW_CPUCLOCKS
 #define FREQ_TABLE_SIZE		(39 + OVERCLOCK_EXTRA_FREQS)
 #define KD_DCVS_MAX_NUM_FREQS	(17 + OVERCLOCK_EXTRA_FREQS)
@@ -28,3 +29,6 @@
 #define KD_DCVS_MAX_NUM_FREQS	(15 + OVERCLOCK_EXTRA_FREQS)
 #endif
 
+=======
+#define FREQ_TABLE_SIZE		(35 + OVERCLOCK_EXTRA_FREQS)
+>>>>>>> 14b676e... Removed useless 162000, 270000 cpu frequency steps.
