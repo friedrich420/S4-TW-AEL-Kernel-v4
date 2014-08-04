@@ -50,6 +50,7 @@
 #ifdef CONFIG_VIBETONZ
 #include <linux/vibrator.h>
 #endif
+
 #include <linux/power_supply.h>
 #ifdef CONFIG_SND_SOC_ES325
 #include <linux/i2c/esxxx.h>
@@ -89,6 +90,7 @@
 #include <mach/msm_iomap.h>
 #include <linux/sec_jack.h>
 #include "clock.h"
+
 #include <mach/apq8064-gpio.h>
 
 #ifdef CONFIG_KEYBOARD_CYPRESS_TOUCH_236
@@ -207,7 +209,6 @@ static void sensor_power_on_vdd(int, int);
 #define PCIE_WAKE_N_PMIC_GPIO 12
 #define PCIE_PWR_EN_PMIC_GPIO 13
 #define PCIE_RST_N_PMIC_MPP 1
-
 
 static int sec_tsp_synaptics_mode;
 static int lcd_tsp_panel_version;
@@ -373,7 +374,6 @@ static struct i2c_board_info max77693_i2c_board_info[] = {
 
 };
 #endif
-
 #if defined(CONFIG_IR_REMOCON_FPGA)
 static void irda_wake_en(bool onoff)
 {
@@ -394,8 +394,7 @@ static void irda_device_init(void)
 		.output_buffer		= PM_GPIO_OUT_BUF_CMOS,
 		.output_value		= 0,
 	};
-	printk(KERN_ERR "%s called!\n", __func__);
-
+	printk(KERN_ERR "%s called!\n", __func__);	
 	gpio_request(PM8921_GPIO_PM_TO_SYS(PMIC_GPIO_IRDA_WAKE), "irda_wake");
 	gpio_direction_output(PM8921_GPIO_PM_TO_SYS(PMIC_GPIO_IRDA_WAKE), 0);
 	pm8xxx_gpio_config(PM8921_GPIO_PM_TO_SYS(	\
@@ -522,7 +521,7 @@ static struct platform_device apq8064_android_pmem_audio_device = {
 static struct platform_device battery_bcl_device = {
 	.name = "battery_current_limit",
 	.id = -1,
-};
+	};
 #endif
 
 struct fmem_platform_data apq8064_fmem_pdata = {
@@ -1032,7 +1031,7 @@ static void __init reserve_cache_dump_memory(void)
 		apq8064_cache_dump_pdata.l2_size;
 	apq8064_reserve_table[MEMTYPE_EBI1].size += total;
 	pr_info("mem_map: cache_dump reserved with size 0x%x in pool\n",
-				total);
+			total);
 #endif
 }
 
@@ -1186,9 +1185,26 @@ static struct platform_device touchkey_i2c_gpio_device_2 = {
 	.id			= MSM_TOUCHKEY_I2C_BUS_ID,
 	.dev.platform_data	= &cypress_touchkey_i2c_gpio_data_2,
 };
+/*
+static void cypress_gpio_init(void)
+{
 
+	if (system_rev < 9) {
+		gpio_tlmm_config(GPIO_CFG(GPIO_TOUCHKEY_SCL, 0, GPIO_CFG_INPUT,
+				GPIO_CFG_NO_PULL, GPIO_CFG_2MA), GPIO_CFG_ENABLE);
+		}
+	else {
+		gpio_tlmm_config(GPIO_CFG(GPIO_TOUCHKEY_SCL_2, 0, GPIO_CFG_INPUT,
+				GPIO_CFG_NO_PULL, GPIO_CFG_2MA), GPIO_CFG_ENABLE);
+		}
+
+		gpio_tlmm_config(GPIO_CFG(GPIO_TOUCHKEY_SDA, 0, GPIO_CFG_INPUT,
+			GPIO_CFG_NO_PULL, GPIO_CFG_2MA), GPIO_CFG_ENABLE);
+
+	printk(KERN_DEBUG "END %s\n",__func__);
+}
+*/
 #endif
-
 
 static char prim_panel_name[PANEL_NAME_MAX_LEN];
 static char ext_panel_name[PANEL_NAME_MAX_LEN];
@@ -1232,7 +1248,6 @@ static void __init apq8064_reserve(void)
 static void __init apq8064_early_reserve(void)
 {
 	reserve_info = &apq8064_reserve_info;
-
 }
 #ifdef CONFIG_USB_EHCI_MSM_HSIC
 /* Bandwidth requests (zero) if no vote placed */
@@ -1403,6 +1418,8 @@ static void mhl_gpio_config(int data)
 {
 	int ret;
 
+	if (system_rev == 0)
+		pm8xxx_gpio_config(PM8921_GPIO_PM_TO_SYS(26), &mhl_int);
 	if (system_rev < 6)
 		gpio_tlmm_config(GPIO_CFG(GPIO_MHL_RST, 0, GPIO_CFG_OUTPUT,
 			GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA), 1);
@@ -1419,7 +1436,11 @@ static void mhl_gpio_config(int data)
 }
 static int get_mhl_int_irq(void)
 {
-	return  MSM_GPIO_TO_INT(GPIO_MHL_INT);
+	if (system_rev == 0) {
+		pm8xxx_gpio_config(PM8921_GPIO_PM_TO_SYS(26), &mhl_int);
+		return PM8921_GPIO_IRQ(PM8921_IRQ_BASE, 26);
+	} else
+		return  MSM_GPIO_TO_INT(GPIO_MHL_INT);
 }
 
 static struct regulator *mhl_l12;
@@ -1431,8 +1452,8 @@ static void sii8240_hw_onoff(bool onoff)
 {
 	int rc = 0;
 	/*VPH_PWR : mhl_power_source
-	VMHL_3.3V, VSIL_A_1.2V, VMHL_1.8V
-	just power control with HDMI_EN pin or control Regulator12*/
+	  VMHL_3.3V, VSIL_A_1.2V, VMHL_1.8V
+	  just power control with HDMI_EN pin or control Regulator12*/
 	pr_info("%s: onoff =%d\n", __func__, onoff);
 	if (mhl_hw_onoff == onoff) {
 		pr_info("mhl_hw_onoff already %d\n", onoff);
@@ -1447,9 +1468,9 @@ static void sii8240_hw_onoff(bool onoff)
 			if (mhl_l12 == NULL) {
 				mhl_l12 = regulator_get(NULL, "8921_l12");
 				if (IS_ERR(mhl_l12))
-					return ;
+					return;
 				rc = regulator_set_voltage(mhl_l12,
-							1200000, 1200000);
+						1200000, 1200000);
 				if (rc)
 					pr_err("error: setting for mhl_l12\n");
 			}
@@ -1457,30 +1478,33 @@ static void sii8240_hw_onoff(bool onoff)
 			if (rc)
 				pr_err("error enabling regulator\n");
 		}
-		if (mhl_l31 == NULL) {
-			mhl_l31 = regulator_get(NULL, "8917_l31");
-			if (IS_ERR(mhl_l31))
-				return ;
-		}
-		rc = regulator_enable(mhl_l31);
-		if (rc)
-			pr_err("error enabling regulator\n");
-		if (mhl_l32 == NULL) {
-			mhl_l32 = regulator_get(NULL, "8917_l32");
-			if (IS_ERR(mhl_l32))
-				return ;
-			rc = regulator_set_voltage(mhl_l32,
-					3300000, 3300000);
-		}
-		rc = regulator_enable(mhl_l32);
-		if (rc)
-			pr_err("error enabling regulator\n");
+		if (system_rev >= 1) {
+			if (mhl_l31 == NULL) {
+				mhl_l31 = regulator_get(NULL, "8917_l31");
+				if (IS_ERR(mhl_l31))
+					return;
+			}
+			rc = regulator_enable(mhl_l31);
+			if (rc)
+				pr_err("error enabling regulator\n");
+			if (mhl_l32 == NULL) {
+				mhl_l32 = regulator_get(NULL, "8917_l32");
+				if (IS_ERR(mhl_l32))
+					return;
+				rc = regulator_set_voltage(mhl_l32,
+						3300000, 3300000);
 
+			}
+			rc = regulator_enable(mhl_l32);
+			if (rc)
+				pr_err("error enabling regulator\n");
+		}
 		usleep(1*1000);
 		if (system_rev >= 6)
 			ice_gpiox_set(FPGA_VSIL_A_1P2_EN, 1);
 		if (system_rev >= 4 && system_rev < 6)
 			gpio_direction_output(PM8921_GPIO_PM_TO_SYS(32), 1);
+
 	} else {
 		if (system_rev >= 6)
 			ice_gpiox_set(FPGA_VSIL_A_1P2_EN, 0);
@@ -1493,23 +1517,25 @@ static void sii8240_hw_onoff(bool onoff)
 					pr_err("error disabling regulator\n");
 			}
 		}
-		if (mhl_l31) {
-			rc =  regulator_disable(mhl_l31);
-			if (rc)
-				pr_err("error: disable mhl_l31\n");
+		if (system_rev >= 1) {
+			if (mhl_l31) {
+				rc =  regulator_disable(mhl_l31);
+				if (rc)
+					pr_err("error: disable mhl_l31\n");
+			}
+			if (mhl_l32) {
+				rc = regulator_disable(mhl_l32);
+				if (rc)
+					pr_err("error disable mhl_l32\n");
+			}
 		}
-		if (mhl_l32) {
-			rc = regulator_disable(mhl_l32);
-			if (rc)
-				pr_err("error disable mhl_l32\n");
-		}
-
 		usleep_range(10000, 20000);
+
 		if (system_rev >= 6)
 			ice_gpiox_set(FPGA_GPIO_MHL_RST, 0);
 		if (system_rev < 6)
 			gpio_direction_output(GPIO_MHL_RST, 0);
-		if (system_rev >= 4  && system_rev < 6)
+		if (system_rev >= 4 && system_rev < 6)
 			pm8xxx_gpio_config(GPIO_MHL_VSIL, &pmic_mhl_en_parm);
 	}
 
@@ -1535,11 +1561,13 @@ static void sii8240_hw_reset(void)
 	if (system_rev < 6) {
 		if (gpio_direction_output(GPIO_MHL_RST, 1))
 			pr_err("%s error in making GPIO_MHL_RST HIGH\n",
-			__func__);
+				__func__);
+
 		usleep_range(5000, 20000);
 		if (gpio_direction_output(GPIO_MHL_RST, 0))
 			pr_err("%s error in making GPIO_MHL_RST Low\n",
 			__func__);
+
 		usleep_range(10000, 20000);
 		if (gpio_direction_output(GPIO_MHL_RST, 1))
 			pr_err("%s error in making GPIO_MHL_RST HIGH\n",
@@ -1552,7 +1580,7 @@ struct sii8240_platform_data sii8240_pdata = {
 	.power = sii8240_hw_onoff,
 	.hw_reset = sii8240_hw_reset,
 	.gpio_cfg = mhl_gpio_config,
-	.swing_level = 0x36,
+	.swing_level = 0x26,
 	.vbus_present = muic77693_mhl_cb,
 };
 
@@ -2086,19 +2114,24 @@ static int ssp_check_changes(void)
 */
 static void ssp_get_positions(int *acc, int *mag)
 {
-	if (system_rev >= BOARD_REV10)
-		*acc = K330_TOP_LEFT_UPPER;
-	else if(system_rev >= BOARD_REV06)
+	if (system_rev == BOARD_REV13)
 		*acc = MPU6500_TOP_RIGHT_UPPER;
-	else if (system_rev >= BOARD_REV04)
+	else if (system_rev > BOARD_REV09)
+		*acc = K330_TOP_LEFT_UPPER;
+	else if (system_rev > BOARD_REV04)
+		*acc = MPU6500_TOP_RIGHT_UPPER;
+	else
 		*acc = MPU6500_BOTTOM_RIGHT_UPPER;
-	else
-		*acc = MPU6500_TOP_LEFT_UPPER;
 
-	if (system_rev >= BOARD_REV04)
-		*mag = YAS532_TOP_RIGHT_LOWER;
-	else
+	if (system_rev > BOARD_REV06)
 		*mag = YAS532_BOTTOM_RIGHT_LOWER;
+	else if (system_rev > BOARD_REV03)
+		*mag = YAS532_TOP_RIGHT_LOWER;
+	else if (system_rev == BOARD_REV03)
+		*mag = YAS532_BOTTOM_RIGHT_LOWER;
+	else
+		*mag = YAS532_TOP_LEFT_UPPER;
+
 	pr_info("%s, position acc : %d, mag = %d\n", __func__, *acc, *mag);
 }
 #endif /* CONFIG_SENSORS_SSP */
@@ -2195,7 +2228,7 @@ static void irda_led_poweron(int onoff)
 {
 	int ret;
 	static struct regulator *reg_l10;
-	if (system_rev >= BOARD_REV10) {
+	if (system_rev >= BOARD_REV08) {
 		if(onoff) {
 			if (!reg_l10) {
 				reg_l10 = regulator_get(NULL, "8921_l10");
@@ -2224,12 +2257,12 @@ static int ice4_clock_en(int onoff)
 	if (system_rev < BOARD_REV04)
 		return 0;
 
-	if (system_rev >= BOARD_REV04 && system_rev <= BOARD_REV09) {
+	if (system_rev <= BOARD_REV08) {
 		if (onoff)
 			msm_xo_mode_vote(fpga_xo, MSM_XO_MODE_ON);
 		else
 			msm_xo_mode_vote(fpga_xo, MSM_XO_MODE_OFF);
-	} else if (system_rev >= BOARD_REV10) {
+	} else if (system_rev >= BOARD_REV09) {
 		static struct clk *fpga_main_clk;
 		if (!fpga_main_clk)
 			fpga_main_clk = clk_get(NULL, "gp0_clk");
@@ -2262,15 +2295,18 @@ static void barcode_emul_poweron(int onoff)
 			pr_err("%s: error vreg_2p85 set voltage ret=%d\n",
 				__func__, ret);
 	}
-	if (barcode_vreg_l33 == NULL) {
-		barcode_vreg_l33 = regulator_get(NULL, "8917_l33");
-		if (IS_ERR(barcode_vreg_l33))
-			return ;
-		ret = regulator_set_voltage(barcode_vreg_l33,
-						1200000, 1200000);
-		if (ret)
-			pr_err("%s: error vreg_l33 set voltage ret=%d\n",
-							__func__, ret);
+	if (system_rev >= BOARD_REV02) {
+		if (barcode_vreg_l33 == NULL) {
+			barcode_vreg_l33 = regulator_get(NULL,
+								"8917_l33");
+			if (IS_ERR(barcode_vreg_l33))
+				return ;
+			ret = regulator_set_voltage(barcode_vreg_l33,
+							1200000, 1200000);
+			if (ret)
+				pr_err("%s: error vreg_l33 set voltage ret=%d\n",
+								__func__, ret);
+		}
 	}
 	if (barcode_vreg_1p8 == NULL) {
 		barcode_vreg_1p8 = regulator_get(NULL, "8921_lvs4");
@@ -2279,9 +2315,13 @@ static void barcode_emul_poweron(int onoff)
 	}
 
 	if (onoff) {
-		ret = regulator_enable(barcode_vreg_l33);
-		if (ret)
-			pr_err("%s: error enabling regulator\n", __func__);
+		if (system_rev >= BOARD_REV02) {
+			ret = regulator_enable(barcode_vreg_l33);
+			if (ret)
+				pr_err("%s: error enabling regulator\n",
+								__func__);
+			pr_info("%s gpio switch on\n", __func__);
+		}
 		ret = regulator_enable(barcode_vreg_2p85);
 		if (ret)
 			pr_err("%s: error enabling regulator\n", __func__);
@@ -2291,14 +2331,14 @@ static void barcode_emul_poweron(int onoff)
 		if (system_rev > BOARD_REV03) {
 			fpga_xo = msm_xo_get(MSM_XO_TCXO_A0, "ice4_fpga");
 			if (IS_ERR(fpga_xo)) {
-				printk(KERN_ERR \
-				"%s: Couldn't get TCXO_A0 vote for ice4_fpga\n",
-				__func__);
+				printk(KERN_ERR "%s: Couldn't get TCXO_A0 vote for ice4_fpga\n",
+											__func__);
 			}
 		}
 	} else {
-		if (system_rev > BOARD_REV03)
+		if (system_rev > BOARD_REV03) {
 			msm_xo_put(fpga_xo);
+		}
 		if (regulator_is_enabled(barcode_vreg_2p85)) {
 			ret = regulator_disable(barcode_vreg_2p85);
 			if (ret)
@@ -2311,11 +2351,13 @@ static void barcode_emul_poweron(int onoff)
 				pr_err("%s: error disabling regulator\n",
 				__func__);
 		}
-		if (regulator_is_enabled(barcode_vreg_l33)) {
-			ret = regulator_disable(barcode_vreg_l33);
-			if (ret)
-				pr_err("%s: error disabling regulator\n",
-						__func__);
+		if (system_rev >= BOARD_REV03) {
+			if (regulator_is_enabled(barcode_vreg_l33)) {
+				ret = regulator_disable(barcode_vreg_l33);
+				if (ret)
+					pr_err("%s: error disabling regulator\n",
+							__func__);
+			}
 		}
 	}
 }
@@ -2323,8 +2365,6 @@ static void barcode_emul_poweron(int onoff)
 static void barcode_gpio_config(void);
 
 struct barcode_emul_platform_data barcode_emul_info = {
-	.spi_clk = PM8921_MPP_PM_TO_SYS(PMIC_MPP_FPGA_SPI_CLK),
-	.spi_si  = PM8921_MPP_PM_TO_SYS(PMIC_MPP_FPGA_SPI_SI),
 	.spi_en  = GPIO_FPGA_SPI_EN,
 	.cresetb = GPIO_FPGA_CRESET_B,
 	.rst_n   = PM8921_GPIO_PM_TO_SYS(PMIC_GPIO_FPGA_RST_N),
@@ -2364,21 +2404,23 @@ static void barcode_gpio_config(void)
 	pr_info("%s\n", __func__);
 	pm8xxx_gpio_config(PM8921_GPIO_PM_TO_SYS(	\
 			PMIC_GPIO_FPGA_RST_N), &creset_b);
+
 	gpio_request_one(GPIO_FPGA_CDONE, GPIOF_IN, "FPGA_CDONE");
 	if (system_rev < BOARD_REV06)
 		gpio_request_one(GPIO_FPGA_SPI_EN, GPIOF_OUT_INIT_LOW,
 							"FPGA_SPI_EN");
-	if (system_rev > BOARD_REV05)
+	if (system_rev > BOARD_REV05) {
 		pm8xxx_gpio_config(PM8921_GPIO_PM_TO_SYS(	\
 				PMIC_GPIO_FPGA_CRESET_B), &creset_b);
-	else
+	} else {
 		gpio_request_one(GPIO_FPGA_CRESET_B, GPIOF_OUT_INIT_LOW,
 							"FPGA_CRESET_B");
+	}
 	if (system_rev > BOARD_REV03 && system_rev < BOARD_REV06)
 		barcode_emul_info.fw_type = ICE_19M;
-	else if (system_rev > BOARD_REV05 && system_rev < BOARD_REV10)
+	else if (system_rev > BOARD_REV05 && system_rev < BOARD_REV09)
 		barcode_emul_info.fw_type = ICE_I2C;
-	else if (system_rev >= BOARD_REV10)
+	else if (system_rev >= BOARD_REV09)
 		barcode_emul_info.fw_type = ICE_24M;
 
 	pm8xxx_mpp_config(PM8921_MPP_PM_TO_SYS(PMIC_MPP_FPGA_SPI_CLK),
@@ -2386,15 +2428,13 @@ static void barcode_gpio_config(void)
 	pm8xxx_mpp_config(PM8921_MPP_PM_TO_SYS(PMIC_MPP_FPGA_SPI_SI),
 						&barcode_mppcfg);
 
-	if (system_rev >= BOARD_REV10) {
+	if (system_rev >= BOARD_REV09) {
 		gpio_tlmm_config(GPIO_CFG(GPIO_FPGA_MAIN_CLK, \
 			2, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA), GPIO_CFG_ENABLE);
 	}
 }
 
 static struct i2c_gpio_platform_data barcode_i2c_gpio_data = {
-	.sda_pin = GPIO_FPGA_I2C_SDA,
-	.scl_pin = GPIO_FPGA_I2C_SCL,
 #if defined(CONFIG_IR_REMOCON_FPGA)
 	.udelay = 2,
 	.sda_is_open_drain = 0,
@@ -2409,7 +2449,7 @@ struct platform_device barcode_i2c_gpio_device = {
 	.dev.platform_data = &barcode_i2c_gpio_data,
 };
 
-static struct i2c_board_info barcode_i2c_board_info[] = {
+static struct i2c_board_info ice4_fpga_i2c_board_info[] = {
 	{
 		I2C_BOARD_INFO("ice4", (0x6c)),
 		.platform_data = &barcode_emul_info,
@@ -3168,7 +3208,7 @@ static struct mdm_platform_data sglte2_mdm_platform_data = {
 static struct mdm_platform_data sglte2_qsc_platform_data = {
 	.mdm_version = "3.0",
 	.ramdump_delay_ms = 2000,
-	/* delay between two PS_HOLDs */
+     /* delay between two PS_HOLDs */
 	.ps_hold_delay_ms = 500,
 	.ramdump_timeout_ms = 600000,
 	.no_powerdown_after_ramdumps = 1,
@@ -3194,7 +3234,15 @@ static struct platform_device msm_tsens_device = {
 static struct msm_thermal_data msm_thermal_pdata = {
 	.sensor_id = 7,
 	.poll_ms = 250,
+<<<<<<< HEAD
 	.limit_temp_degC = 70,
+=======
+#ifdef CONFIG_CPU_OVERCLOCK
+	.limit_temp_degC = 80,
+#else
+	.limit_temp_degC = 60,
+#endif
+>>>>>>> dd93cc1... Implemented CPU OVERCLOCK!
 	.temp_hysteresis_degC = 10,
 	.freq_step = 2,
 	.core_limit_temp_degC = 80,
@@ -3401,7 +3449,6 @@ static uint8_t spm_power_collapse_with_rpm_krait_v3[] __initdata = {
 	0x24, 0x30, 0x0f,
 };
 
-
 static struct msm_spm_seq_entry msm_spm_boot_cpu_seq_list[] __initdata = {
 	[0] = {
 		.mode = MSM_SPM_MODE_CLOCK_GATING,
@@ -3571,11 +3618,11 @@ static void __init apq8064ab_update_krait_spm(void)
 			if (pdata->modes[j].cmd ==
 					spm_power_collapse_without_rpm)
 				pdata->modes[j].cmd =
-					spm_power_collapse_without_rpm_krait_v3;
+				spm_power_collapse_without_rpm_krait_v3;
 			else if (pdata->modes[j].cmd ==
 					spm_power_collapse_with_rpm)
 				pdata->modes[j].cmd =
-					spm_power_collapse_with_rpm_krait_v3;
+				spm_power_collapse_with_rpm_krait_v3;
 		}
 	}
 }
@@ -3715,7 +3762,7 @@ static struct sec_jack_zone jack_zones[] = {
 	},
 };
 
-static struct sec_jack_zone jack_zones_rev3[] = {
+static struct sec_jack_zone jack_zones_rev7[] = {
 	[0] = {
 		.adc_high	= 3,
 		.delay_us	= 10000,
@@ -3761,7 +3808,7 @@ static struct sec_jack_buttons_zone jack_buttons_zones[] = {
 	},
 };
 
-static struct sec_jack_buttons_zone jack_buttons_zones_rev3[] = {
+static struct sec_jack_buttons_zone jack_buttons_zones_rev7[] = {
 	{
 		.code		= KEY_MEDIA,
 		.adc_low	= 0,
@@ -3923,7 +3970,7 @@ static struct platform_device *early_common_devices[] __initdata = {
 	&apq8064_device_dmov,
 #if !defined(CONFIG_MACH_JACTIVE_ATT) && !defined(CONFIG_MACH_JACTIVE_EUR)
 	&apq8064_device_qup_spi_gsbi5,
-#endif
+#endif	
 };
 
 static struct platform_device *pm8921_common_devices[] __initdata = {
@@ -3951,6 +3998,9 @@ static struct platform_device *common_devices[] __initdata = {
 	&apq8064_device_hsusb_host,
 	&android_usb_device,
 	&msm_device_wcnss_wlan,
+#if defined(CONFIG_MACH_JACTIVE_ATT) || defined(CONFIG_MACH_JACTIVE_EUR)
+	&apq8064_device_qup_spi_gsbi5,
+#endif	
 	&msm_device_iris_fm,
 	&apq8064_fmem_device,
 #ifdef CONFIG_ANDROID_PMEM
@@ -4061,15 +4111,15 @@ static struct platform_device *common_devices[] __initdata = {
 	&msm_tsens_device,
 	&apq8064_cache_dump_device,
 	&msm_8064_device_tspp,
+#ifdef CONFIG_SEC_FPGA
+	&barcode_i2c_gpio_device,
+#endif
 #ifdef CONFIG_BATTERY_BCL
 	&battery_bcl_device,
 #endif
 #ifdef CONFIG_VIBETONZ
 	&vibetonz_device,
 #endif /* CONFIG_VIBETONZ */
-#ifdef CONFIG_SEC_FPGA
-	&barcode_i2c_gpio_device,
-#endif
 #ifdef CONFIG_LEDS_AN30259A
 	&leds_i2c_device,
 #endif
@@ -4444,10 +4494,11 @@ static void __init apq8064_i2c_init(void)
 					&apq8064_i2c_qup_gsbi3_pdata;
 	apq8064_device_qup_i2c_gsbi1.dev.platform_data =
 					&apq8064_i2c_qup_gsbi1_pdata;
+
 	/* Add GSBI4 I2C pdata for non-fusion3 SGLTE2 */
 	if (socinfo_get_platform_subtype() !=
-			PLATFORM_SUBTYPE_SGLTE2) {
-	apq8064_device_qup_i2c_gsbi4.dev.platform_data =
+				PLATFORM_SUBTYPE_SGLTE2) {
+		apq8064_device_qup_i2c_gsbi4.dev.platform_data =
 					&apq8064_i2c_qup_gsbi4_pdata;
 	}
 	mpq8064_device_qup_i2c_gsbi5.dev.platform_data =
@@ -4894,8 +4945,8 @@ static struct i2c_registry apq8064_i2c_devices[] __initdata = {
 	{
 		I2C_FFA,
 		MSM_SEC_FPGA_I2C_BUS_ID,
-		barcode_i2c_board_info,
-		ARRAY_SIZE(barcode_i2c_board_info),
+		ice4_fpga_i2c_board_info,
+		ARRAY_SIZE(ice4_fpga_i2c_board_info),
 	},
 #endif
 };
@@ -4986,7 +5037,6 @@ static void __init register_i2c_devices(void)
 		apq8064_camera_board_info.board_info,
 		apq8064_camera_board_info.num_i2c_board_info,
 	};
-
 	struct i2c_registry apq8064_front_camera_i2c_devices = {
 		I2C_SURF | I2C_FFA | I2C_LIQUID | I2C_RUMI,
 		APQ_8064_GSBI7_QUP_I2C_BUS_ID,
@@ -5034,7 +5084,6 @@ static void __init register_i2c_devices(void)
 	}
 }
 
-
 static void enable_avc_i2c_bus(void)
 {
 	int avc_i2c_en_mpp = PM8921_MPP_PM_TO_SYS(8);
@@ -5077,18 +5126,21 @@ static void main_mic_bias_init(void)
 
 static void __init gpio_rev_init(void)
 {
-
 #ifdef CONFIG_SEC_FPGA
-	if (system_rev > BOARD_REV05) {
-		barcode_i2c_gpio_data.sda_pin =
-			PM8921_MPP_PM_TO_SYS(PMIC_MPP_FPGA_SPI_SI);
-		barcode_i2c_gpio_data.scl_pin =
-			PM8921_MPP_PM_TO_SYS(PMIC_MPP_FPGA_SPI_CLK);
-		barcode_emul_info.spi_en  = -1;
+	barcode_i2c_gpio_data.sda_pin =
+		PM8921_MPP_PM_TO_SYS(PMIC_MPP_FPGA_SPI_SI);
+	barcode_i2c_gpio_data.scl_pin =
+		PM8921_MPP_PM_TO_SYS(PMIC_MPP_FPGA_SPI_CLK);
+	barcode_emul_info.spi_en  = -1;
+
+	if (system_rev > BOARD_REV05)
 		barcode_emul_info.cresetb =
 		PM8921_GPIO_PM_TO_SYS(PMIC_GPIO_FPGA_CRESET_B);
-	}
 
+	barcode_emul_info.spi_clk =
+			PM8921_MPP_PM_TO_SYS(PMIC_MPP_FPGA_SPI_CLK);
+	barcode_emul_info.spi_si  =
+			PM8921_MPP_PM_TO_SYS(PMIC_MPP_FPGA_SPI_SI);
 #endif
 }
 static void sec_jack_init(void)
@@ -5139,18 +5191,18 @@ static void sec_jack_init(void)
 			PM8921_GPIO_PM_TO_SYS(PMIC_GPIO_EAR_MICBIAS_EN),
 			&ear_micbiase);
 
-
 	if (system_rev >= BOARD_REV07) {
 		sec_jack_data.send_end_active_high = true;
-		sec_jack_data.zones = jack_zones_rev3;
-		sec_jack_data.buttons_zones = jack_buttons_zones_rev3;
+		sec_jack_data.zones = jack_zones_rev7;
+		sec_jack_data.buttons_zones = jack_buttons_zones_rev7;
 	}
-	if (system_rev == BOARD_REV09) {
+
+	if (system_rev == BOARD_REV08) {
 		pm8xxx_gpio_config(
 			PM8921_GPIO_PM_TO_SYS(PMIC_GPIO_FSA8048_EN),
 			&fsa8048_en_old);
 	}
-	if (system_rev >= BOARD_REV11) {
+	if (system_rev >= BOARD_REV10) {
 		pm8xxx_gpio_config(
 			PM8921_GPIO_PM_TO_SYS(PMIC_GPIO_FSA8048_EN),
 			&fsa8048_en);
@@ -5209,7 +5261,7 @@ static void __init apq8064ab_update_retention_spm(void)
 			if (pdata->modes[j].cmd ==
 					spm_retention_cmd_sequence)
 				pdata->modes[j].cmd =
-					spm_retention_with_krait_v3_cmd_sequence;
+				spm_retention_with_krait_v3_cmd_sequence;
 		}
 	}
 }
@@ -5217,6 +5269,7 @@ static void __init apq8064ab_update_retention_spm(void)
 static void __init apq8064_common_init(void)
 {
 	u32 platform_version = socinfo_get_platform_version();
+
 #ifdef CONFIG_KEYBOARD_CYPRESS_TOUCH_236
 	int ret;
 #endif
@@ -5286,19 +5339,20 @@ static void __init apq8064_common_init(void)
 			machine_is_mpq8064_dtv())) {
 		platform_add_devices(common_not_mpq_devices,
 			ARRAY_SIZE(common_not_mpq_devices));
+
 		/* Add GSBI4 I2C Device for non-fusion3 platform */
 		if (socinfo_get_platform_subtype() !=
-				PLATFORM_SUBTYPE_SGLTE2) {
+					PLATFORM_SUBTYPE_SGLTE2) {
 			platform_device_register(&apq8064_device_qup_i2c_gsbi4);
 		}
 	}
-
 #ifdef CONFIG_KEYBOARD_CYPRESS_TOUCH_236
-		if (system_rev < 10)
+		if (system_rev < 9)
 			platform_device_register(&touchkey_i2c_gpio_device);
 		else
 			platform_device_register(&touchkey_i2c_gpio_device_2);
 #endif
+
 	msm_hsic_pdata.swfi_latency =
 		msm_rpmrs_levels[0].latency_us;
 	if (machine_is_apq8064_mtp() || machine_is_JF()) {
@@ -5323,7 +5377,7 @@ static void __init apq8064_common_init(void)
 				&bmdm_platform_data;
 			platform_device_register(&bmdm_8064_device);
 		} else if (socinfo_get_platform_subtype() ==
-				PLATFORM_SUBTYPE_SGLTE2) {
+				   PLATFORM_SUBTYPE_SGLTE2) {
 			sglte_mdm_8064_device.dev.platform_data =
 				&sglte2_mdm_platform_data;
 			platform_device_register(&sglte_mdm_8064_device);
@@ -5334,7 +5388,7 @@ static void __init apq8064_common_init(void)
 			/* GSBI4 UART device for Primay IPC */
 			apq8064_uartdm_gsbi4_pdata.wakeup_irq = gpio_to_irq(11);
 			apq8064_device_uartdm_gsbi4.dev.platform_data =
-				&apq8064_uartdm_gsbi4_pdata;
+						&apq8064_uartdm_gsbi4_pdata;
 			platform_device_register(&apq8064_device_uartdm_gsbi4);
 		} else if (SOCINFO_VERSION_MINOR(platform_version) == 1) {
 			i2s_mdm_8064_device.dev.platform_data =
@@ -5385,6 +5439,7 @@ static void __init apq8064_common_init(void)
 	msm8960_mhl_gpio_init();
 #endif
 #ifdef CONFIG_KEYBOARD_CYPRESS_TOUCH_236
+	/*cypress_gpio_init();*/
 	ret = pm8xxx_gpio_config(PM8921_GPIO_PM_TO_SYS(PMIC_GPIO_TKEY_INT),
 							&tkey_int);
 	if (ret)
@@ -5403,6 +5458,7 @@ static void __init apq8064_allocate_memory_regions(void)
 
 static void __init apq8064_gpio_keys_init(void)
 {
+	int ret;
 	struct pm_gpio param = {
 		.direction     = PM_GPIO_DIR_IN,
 		.pull          = PM_GPIO_PULL_UP_31P5,
@@ -5417,8 +5473,11 @@ static void __init apq8064_gpio_keys_init(void)
 		.vin_sel       = PM_GPIO_VIN_S4,
 		.function      = PM_GPIO_FUNC_NORMAL,
 	};
-	gpio_request(PM8921_GPIO_PM_TO_SYS(PMIC_GPIO_HALL_SENSOR_INT),
+	ret = gpio_request(PM8921_GPIO_PM_TO_SYS(PMIC_GPIO_HALL_SENSOR_INT),
 						"GPIO_HALL_SENSOR_INT");
+	if (ret)
+		pr_err("%s : gpio_request failed for %d\n", __func__,
+			PM8921_GPIO_PM_TO_SYS(PMIC_GPIO_HALL_SENSOR_INT));
 	pm8xxx_gpio_config(PM8921_GPIO_PM_TO_SYS(PMIC_GPIO_HALL_SENSOR_INT),
 						&param_hall_ic);
 #endif
@@ -5470,12 +5529,13 @@ static void __init samsung_jf_init(void)
 #ifdef CONFIG_MSM_CAMERA
 	apq8064_init_cam();
 #endif
+
 	if (machine_is_mpq8064_hrd() || machine_is_mpq8064_dtv()) {
 #ifdef CONFIG_SERIAL_MSM_HS
 		/* GSBI6(2) - UARTDM_RX */
 		mpq8064_gsbi6_uartdm_pdata.wakeup_irq = gpio_to_irq(15);
 		mpq8064_device_uartdm_gsbi6.dev.platform_data =
-			&mpq8064_gsbi6_uartdm_pdata;
+					&mpq8064_gsbi6_uartdm_pdata;
 #endif
 		platform_device_register(&mpq8064_device_uartdm_gsbi6);
 	}
@@ -5498,7 +5558,6 @@ static void __init samsung_jf_init(void)
 	bcm2079x_init();
 	nfc_gpio_rev_init();
 #endif
-
 #ifndef CONFIG_MACH_JF
 	if (machine_is_mpq8064_cdp()) {
 		platform_device_register(&mpq_gpio_keys_pdev);

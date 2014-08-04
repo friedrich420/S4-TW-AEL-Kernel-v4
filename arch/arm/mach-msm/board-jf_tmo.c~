@@ -208,7 +208,6 @@ static void sensor_power_on_vdd(int, int);
 #define PCIE_PWR_EN_PMIC_GPIO 13
 #define PCIE_RST_N_PMIC_MPP 1
 
-
 static int sec_tsp_synaptics_mode;
 static int lcd_tsp_panel_version;
 
@@ -248,7 +247,7 @@ static int __init sec_tsp_mode(char *mode)
 	if (ret == 0)
 		sec_tsp_synaptics_mode = 1;
 
-	if (ret1 == 0x00 && system_rev >= BOARD_REV11)
+	if (ret1 == 0x00 && system_rev >= BOARD_REV10)
 		sec_tsp_synaptics_mode = 1;
 
 	pr_info("%s : %s", __func__, sec_tsp_synaptics_mode ?
@@ -522,7 +521,7 @@ static struct platform_device apq8064_android_pmem_audio_device = {
 static struct platform_device battery_bcl_device = {
 	.name = "battery_current_limit",
 	.id = -1,
-};
+	};
 #endif
 
 struct fmem_platform_data apq8064_fmem_pdata = {
@@ -1032,7 +1031,7 @@ static void __init reserve_cache_dump_memory(void)
 		apq8064_cache_dump_pdata.l2_size;
 	apq8064_reserve_table[MEMTYPE_EBI1].size += total;
 	pr_info("mem_map: cache_dump reserved with size 0x%x in pool\n",
-				total);
+			total);
 #endif
 }
 
@@ -1189,7 +1188,6 @@ static struct platform_device touchkey_i2c_gpio_device_2 = {
 
 #endif
 
-
 static char prim_panel_name[PANEL_NAME_MAX_LEN];
 static char ext_panel_name[PANEL_NAME_MAX_LEN];
 
@@ -1232,7 +1230,6 @@ static void __init apq8064_reserve(void)
 static void __init apq8064_early_reserve(void)
 {
 	reserve_info = &apq8064_reserve_info;
-
 }
 #ifdef CONFIG_USB_EHCI_MSM_HSIC
 /* Bandwidth requests (zero) if no vote placed */
@@ -1471,6 +1468,7 @@ static void sii8240_hw_onoff(bool onoff)
 				return ;
 			rc = regulator_set_voltage(mhl_l32,
 					3300000, 3300000);
+
 		}
 		rc = regulator_enable(mhl_l32);
 		if (rc)
@@ -1505,11 +1503,12 @@ static void sii8240_hw_onoff(bool onoff)
 		}
 
 		usleep_range(10000, 20000);
+
 		if (system_rev >= 6)
 			ice_gpiox_set(FPGA_GPIO_MHL_RST, 0);
 		if (system_rev < 6)
 			gpio_direction_output(GPIO_MHL_RST, 0);
-		if (system_rev >= 4  && system_rev < 6)
+		if (system_rev >= 4 && system_rev < 6)
 			pm8xxx_gpio_config(GPIO_MHL_VSIL, &pmic_mhl_en_parm);
 	}
 
@@ -1536,10 +1535,12 @@ static void sii8240_hw_reset(void)
 		if (gpio_direction_output(GPIO_MHL_RST, 1))
 			pr_err("%s error in making GPIO_MHL_RST HIGH\n",
 			__func__);
+
 		usleep_range(5000, 20000);
 		if (gpio_direction_output(GPIO_MHL_RST, 0))
 			pr_err("%s error in making GPIO_MHL_RST Low\n",
 			__func__);
+
 		usleep_range(10000, 20000);
 		if (gpio_direction_output(GPIO_MHL_RST, 1))
 			pr_err("%s error in making GPIO_MHL_RST HIGH\n",
@@ -2086,19 +2087,22 @@ static int ssp_check_changes(void)
 */
 static void ssp_get_positions(int *acc, int *mag)
 {
-	if (system_rev >= BOARD_REV10)
+	if (system_rev > BOARD_REV09)
 		*acc = K330_TOP_LEFT_UPPER;
-	else if(system_rev >= BOARD_REV06)
+	else if (system_rev > BOARD_REV04)
 		*acc = MPU6500_TOP_RIGHT_UPPER;
-	else if (system_rev >= BOARD_REV04)
+	else
 		*acc = MPU6500_BOTTOM_RIGHT_UPPER;
-	else
-		*acc = MPU6500_TOP_LEFT_UPPER;
 
-	if (system_rev >= BOARD_REV04)
-		*mag = YAS532_TOP_RIGHT_LOWER;
-	else
+	if (system_rev > BOARD_REV06)
 		*mag = YAS532_BOTTOM_RIGHT_LOWER;
+	else if (system_rev > BOARD_REV03)
+		*mag = YAS532_TOP_RIGHT_LOWER;
+	else if (system_rev == BOARD_REV03)
+		*mag = YAS532_BOTTOM_RIGHT_LOWER;
+	else
+		*mag = YAS532_TOP_LEFT_UPPER;
+
 	pr_info("%s, position acc : %d, mag = %d\n", __func__, *acc, *mag);
 }
 #endif /* CONFIG_SENSORS_SSP */
@@ -2146,7 +2150,7 @@ static int __init bcm2079x_init(void)
 	};
 	pm8xxx_gpio_config(GPIO_NFC_IRQ, &nfc_irq_cfg);
 	pm8xxx_gpio_config(GPIO_NFC_EN, &nfc_en_cfg);
-	if (system_rev > BOARD_REV11)
+	if (system_rev > BOARD_REV12)
 		gpio_tlmm_config(GPIO_CFG(GPIO_NFC_FIRMWARE_AP, 0,
 			GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL,
 			GPIO_CFG_2MA), 1);
@@ -2195,7 +2199,7 @@ static void irda_led_poweron(int onoff)
 {
 	int ret;
 	static struct regulator *reg_l10;
-	if (system_rev >= BOARD_REV10) {
+	if (system_rev >= BOARD_REV09) {
 		if(onoff) {
 			if (!reg_l10) {
 				reg_l10 = regulator_get(NULL, "8921_l10");
@@ -2224,12 +2228,12 @@ static int ice4_clock_en(int onoff)
 	if (system_rev < BOARD_REV04)
 		return 0;
 
-	if (system_rev >= BOARD_REV04 && system_rev <= BOARD_REV09) {
+	if (system_rev >= BOARD_REV04 && system_rev <= BOARD_REV08) {
 		if (onoff)
 			msm_xo_mode_vote(fpga_xo, MSM_XO_MODE_ON);
 		else
 			msm_xo_mode_vote(fpga_xo, MSM_XO_MODE_OFF);
-	} else if (system_rev >= BOARD_REV10) {
+	} else if (system_rev >= BOARD_REV09) {
 		static struct clk *fpga_main_clk;
 		if (!fpga_main_clk)
 			fpga_main_clk = clk_get(NULL, "gp0_clk");
@@ -2376,9 +2380,9 @@ static void barcode_gpio_config(void)
 							"FPGA_CRESET_B");
 	if (system_rev > BOARD_REV03 && system_rev < BOARD_REV06)
 		barcode_emul_info.fw_type = ICE_19M;
-	else if (system_rev > BOARD_REV05 && system_rev < BOARD_REV10)
+	else if (system_rev > BOARD_REV05 && system_rev < BOARD_REV09)
 		barcode_emul_info.fw_type = ICE_I2C;
-	else if (system_rev >= BOARD_REV10)
+	else if (system_rev >= BOARD_REV09)
 		barcode_emul_info.fw_type = ICE_24M;
 
 	pm8xxx_mpp_config(PM8921_MPP_PM_TO_SYS(PMIC_MPP_FPGA_SPI_CLK),
@@ -2386,7 +2390,7 @@ static void barcode_gpio_config(void)
 	pm8xxx_mpp_config(PM8921_MPP_PM_TO_SYS(PMIC_MPP_FPGA_SPI_SI),
 						&barcode_mppcfg);
 
-	if (system_rev >= BOARD_REV10) {
+	if (system_rev >= BOARD_REV09) {
 		gpio_tlmm_config(GPIO_CFG(GPIO_FPGA_MAIN_CLK, \
 			2, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA), GPIO_CFG_ENABLE);
 	}
@@ -3168,7 +3172,7 @@ static struct mdm_platform_data sglte2_mdm_platform_data = {
 static struct mdm_platform_data sglte2_qsc_platform_data = {
 	.mdm_version = "3.0",
 	.ramdump_delay_ms = 2000,
-	/* delay between two PS_HOLDs */
+     /* delay between two PS_HOLDs */
 	.ps_hold_delay_ms = 500,
 	.ramdump_timeout_ms = 600000,
 	.no_powerdown_after_ramdumps = 1,
@@ -3194,7 +3198,15 @@ static struct platform_device msm_tsens_device = {
 static struct msm_thermal_data msm_thermal_pdata = {
 	.sensor_id = 7,
 	.poll_ms = 250,
+<<<<<<< HEAD
 	.limit_temp_degC = 70,
+=======
+#ifdef CONFIG_CPU_OVERCLOCK
+	.limit_temp_degC = 80,
+#else
+	.limit_temp_degC = 60,
+#endif
+>>>>>>> dd93cc1... Implemented CPU OVERCLOCK!
 	.temp_hysteresis_degC = 10,
 	.freq_step = 2,
 	.core_limit_temp_degC = 80,
@@ -3401,7 +3413,6 @@ static uint8_t spm_power_collapse_with_rpm_krait_v3[] __initdata = {
 	0x24, 0x30, 0x0f,
 };
 
-
 static struct msm_spm_seq_entry msm_spm_boot_cpu_seq_list[] __initdata = {
 	[0] = {
 		.mode = MSM_SPM_MODE_CLOCK_GATING,
@@ -3571,11 +3582,11 @@ static void __init apq8064ab_update_krait_spm(void)
 			if (pdata->modes[j].cmd ==
 					spm_power_collapse_without_rpm)
 				pdata->modes[j].cmd =
-					spm_power_collapse_without_rpm_krait_v3;
+				spm_power_collapse_without_rpm_krait_v3;
 			else if (pdata->modes[j].cmd ==
 					spm_power_collapse_with_rpm)
 				pdata->modes[j].cmd =
-					spm_power_collapse_with_rpm_krait_v3;
+				spm_power_collapse_with_rpm_krait_v3;
 		}
 	}
 }
@@ -3715,7 +3726,7 @@ static struct sec_jack_zone jack_zones[] = {
 	},
 };
 
-static struct sec_jack_zone jack_zones_rev3[] = {
+static struct sec_jack_zone jack_zones_rev7[] = {
 	[0] = {
 		.adc_high	= 3,
 		.delay_us	= 10000,
@@ -3761,7 +3772,7 @@ static struct sec_jack_buttons_zone jack_buttons_zones[] = {
 	},
 };
 
-static struct sec_jack_buttons_zone jack_buttons_zones_rev3[] = {
+static struct sec_jack_buttons_zone jack_buttons_zones_rev7[] = {
 	{
 		.code		= KEY_MEDIA,
 		.adc_low	= 0,
@@ -3923,7 +3934,7 @@ static struct platform_device *early_common_devices[] __initdata = {
 	&apq8064_device_dmov,
 #if !defined(CONFIG_MACH_JACTIVE_ATT) && !defined(CONFIG_MACH_JACTIVE_EUR)
 	&apq8064_device_qup_spi_gsbi5,
-#endif
+#endif	
 };
 
 static struct platform_device *pm8921_common_devices[] __initdata = {
@@ -3951,6 +3962,9 @@ static struct platform_device *common_devices[] __initdata = {
 	&apq8064_device_hsusb_host,
 	&android_usb_device,
 	&msm_device_wcnss_wlan,
+#if defined(CONFIG_MACH_JACTIVE_ATT) || defined(CONFIG_MACH_JACTIVE_EUR)
+	&apq8064_device_qup_spi_gsbi5,
+#endif	
 	&msm_device_iris_fm,
 	&apq8064_fmem_device,
 #ifdef CONFIG_ANDROID_PMEM
@@ -4444,10 +4458,11 @@ static void __init apq8064_i2c_init(void)
 					&apq8064_i2c_qup_gsbi3_pdata;
 	apq8064_device_qup_i2c_gsbi1.dev.platform_data =
 					&apq8064_i2c_qup_gsbi1_pdata;
+
 	/* Add GSBI4 I2C pdata for non-fusion3 SGLTE2 */
 	if (socinfo_get_platform_subtype() !=
-			PLATFORM_SUBTYPE_SGLTE2) {
-	apq8064_device_qup_i2c_gsbi4.dev.platform_data =
+				PLATFORM_SUBTYPE_SGLTE2) {
+		apq8064_device_qup_i2c_gsbi4.dev.platform_data =
 					&apq8064_i2c_qup_gsbi4_pdata;
 	}
 	mpq8064_device_qup_i2c_gsbi5.dev.platform_data =
@@ -5034,7 +5049,6 @@ static void __init register_i2c_devices(void)
 	}
 }
 
-
 static void enable_avc_i2c_bus(void)
 {
 	int avc_i2c_en_mpp = PM8921_MPP_PM_TO_SYS(8);
@@ -5139,18 +5153,18 @@ static void sec_jack_init(void)
 			PM8921_GPIO_PM_TO_SYS(PMIC_GPIO_EAR_MICBIAS_EN),
 			&ear_micbiase);
 
-
 	if (system_rev >= BOARD_REV07) {
 		sec_jack_data.send_end_active_high = true;
-		sec_jack_data.zones = jack_zones_rev3;
-		sec_jack_data.buttons_zones = jack_buttons_zones_rev3;
+		sec_jack_data.zones = jack_zones_rev7;
+		sec_jack_data.buttons_zones = jack_buttons_zones_rev7;
 	}
-	if (system_rev == BOARD_REV09) {
+
+	if (system_rev == BOARD_REV08) {
 		pm8xxx_gpio_config(
 			PM8921_GPIO_PM_TO_SYS(PMIC_GPIO_FSA8048_EN),
 			&fsa8048_en_old);
 	}
-	if (system_rev >= BOARD_REV11) {
+	if (system_rev >= BOARD_REV10) {
 		pm8xxx_gpio_config(
 			PM8921_GPIO_PM_TO_SYS(PMIC_GPIO_FSA8048_EN),
 			&fsa8048_en);
@@ -5185,6 +5199,15 @@ static void vps_sound_init(void)
 
 }
 
+#ifndef CONFIG_MACH_JF
+/* Modify platform data values to match requirements for PM8917. */
+static void __init apq8064_pm8917_pdata_fixup(void)
+{
+	cdp_keys_data.buttons = cdp_keys_pm8917;
+	cdp_keys_data.nbuttons = ARRAY_SIZE(cdp_keys_pm8917);
+}
+#endif
+
 #ifdef CONFIG_SERIAL_MSM_HS
 static struct msm_serial_hs_platform_data apq8064_uartdm_gsbi4_pdata = {
 	.config_gpio	= 4,
@@ -5209,7 +5232,7 @@ static void __init apq8064ab_update_retention_spm(void)
 			if (pdata->modes[j].cmd ==
 					spm_retention_cmd_sequence)
 				pdata->modes[j].cmd =
-					spm_retention_with_krait_v3_cmd_sequence;
+				spm_retention_with_krait_v3_cmd_sequence;
 		}
 	}
 }
@@ -5217,6 +5240,7 @@ static void __init apq8064ab_update_retention_spm(void)
 static void __init apq8064_common_init(void)
 {
 	u32 platform_version = socinfo_get_platform_version();
+
 #ifdef CONFIG_KEYBOARD_CYPRESS_TOUCH_236
 	int ret;
 #endif
@@ -5286,19 +5310,20 @@ static void __init apq8064_common_init(void)
 			machine_is_mpq8064_dtv())) {
 		platform_add_devices(common_not_mpq_devices,
 			ARRAY_SIZE(common_not_mpq_devices));
+
 		/* Add GSBI4 I2C Device for non-fusion3 platform */
 		if (socinfo_get_platform_subtype() !=
-				PLATFORM_SUBTYPE_SGLTE2) {
+					PLATFORM_SUBTYPE_SGLTE2) {
 			platform_device_register(&apq8064_device_qup_i2c_gsbi4);
 		}
 	}
-
 #ifdef CONFIG_KEYBOARD_CYPRESS_TOUCH_236
-		if (system_rev < 10)
+		if (system_rev < 9)
 			platform_device_register(&touchkey_i2c_gpio_device);
 		else
 			platform_device_register(&touchkey_i2c_gpio_device_2);
 #endif
+
 	msm_hsic_pdata.swfi_latency =
 		msm_rpmrs_levels[0].latency_us;
 	if (machine_is_apq8064_mtp() || machine_is_JF()) {
@@ -5323,7 +5348,7 @@ static void __init apq8064_common_init(void)
 				&bmdm_platform_data;
 			platform_device_register(&bmdm_8064_device);
 		} else if (socinfo_get_platform_subtype() ==
-				PLATFORM_SUBTYPE_SGLTE2) {
+				   PLATFORM_SUBTYPE_SGLTE2) {
 			sglte_mdm_8064_device.dev.platform_data =
 				&sglte2_mdm_platform_data;
 			platform_device_register(&sglte_mdm_8064_device);
@@ -5334,7 +5359,7 @@ static void __init apq8064_common_init(void)
 			/* GSBI4 UART device for Primay IPC */
 			apq8064_uartdm_gsbi4_pdata.wakeup_irq = gpio_to_irq(11);
 			apq8064_device_uartdm_gsbi4.dev.platform_data =
-				&apq8064_uartdm_gsbi4_pdata;
+						&apq8064_uartdm_gsbi4_pdata;
 			platform_device_register(&apq8064_device_uartdm_gsbi4);
 		} else if (SOCINFO_VERSION_MINOR(platform_version) == 1) {
 			i2s_mdm_8064_device.dev.platform_data =
@@ -5470,12 +5495,13 @@ static void __init samsung_jf_init(void)
 #ifdef CONFIG_MSM_CAMERA
 	apq8064_init_cam();
 #endif
+
 	if (machine_is_mpq8064_hrd() || machine_is_mpq8064_dtv()) {
 #ifdef CONFIG_SERIAL_MSM_HS
 		/* GSBI6(2) - UARTDM_RX */
 		mpq8064_gsbi6_uartdm_pdata.wakeup_irq = gpio_to_irq(15);
 		mpq8064_device_uartdm_gsbi6.dev.platform_data =
-			&mpq8064_gsbi6_uartdm_pdata;
+					&mpq8064_gsbi6_uartdm_pdata;
 #endif
 		platform_device_register(&mpq8064_device_uartdm_gsbi6);
 	}
@@ -5498,7 +5524,6 @@ static void __init samsung_jf_init(void)
 	bcm2079x_init();
 	nfc_gpio_rev_init();
 #endif
-
 #ifndef CONFIG_MACH_JF
 	if (machine_is_mpq8064_cdp()) {
 		platform_device_register(&mpq_gpio_keys_pdev);

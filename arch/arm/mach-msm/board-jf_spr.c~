@@ -208,7 +208,6 @@ static void sensor_power_on_vdd(int, int);
 #define PCIE_PWR_EN_PMIC_GPIO 13
 #define PCIE_RST_N_PMIC_MPP 1
 
-
 static int sec_tsp_synaptics_mode;
 static int lcd_tsp_panel_version;
 
@@ -1419,7 +1418,7 @@ static void mhl_gpio_config(int data)
 }
 static int get_mhl_int_irq(void)
 {
-	return  MSM_GPIO_TO_INT(GPIO_MHL_INT);
+		return  MSM_GPIO_TO_INT(GPIO_MHL_INT);
 }
 
 static struct regulator *mhl_l12;
@@ -1536,6 +1535,7 @@ static void sii8240_hw_reset(void)
 		if (gpio_direction_output(GPIO_MHL_RST, 1))
 			pr_err("%s error in making GPIO_MHL_RST HIGH\n",
 			__func__);
+
 		usleep_range(5000, 20000);
 		if (gpio_direction_output(GPIO_MHL_RST, 0))
 			pr_err("%s error in making GPIO_MHL_RST Low\n",
@@ -2086,16 +2086,16 @@ static int ssp_check_changes(void)
 */
 static void ssp_get_positions(int *acc, int *mag)
 {
-	if (system_rev >= BOARD_REV10)
+	if (system_rev > BOARD_REV10)
 		*acc = K330_TOP_LEFT_UPPER;
-	else if(system_rev >= BOARD_REV06)
+	else if (system_rev > BOARD_REV05)
 		*acc = MPU6500_TOP_RIGHT_UPPER;
-	else if (system_rev >= BOARD_REV04)
+	else if (system_rev > BOARD_REV03)
 		*acc = MPU6500_BOTTOM_RIGHT_UPPER;
 	else
 		*acc = MPU6500_TOP_LEFT_UPPER;
 
-	if (system_rev >= BOARD_REV04)
+	if (system_rev > BOARD_REV03)
 		*mag = YAS532_TOP_RIGHT_LOWER;
 	else
 		*mag = YAS532_BOTTOM_RIGHT_LOWER;
@@ -3194,7 +3194,15 @@ static struct platform_device msm_tsens_device = {
 static struct msm_thermal_data msm_thermal_pdata = {
 	.sensor_id = 7,
 	.poll_ms = 250,
+<<<<<<< HEAD
 	.limit_temp_degC = 70,
+=======
+#ifdef CONFIG_CPU_OVERCLOCK
+	.limit_temp_degC = 80,
+#else
+	.limit_temp_degC = 60,
+#endif
+>>>>>>> dd93cc1... Implemented CPU OVERCLOCK!
 	.temp_hysteresis_degC = 10,
 	.freq_step = 2,
 	.core_limit_temp_degC = 80,
@@ -3715,7 +3723,7 @@ static struct sec_jack_zone jack_zones[] = {
 	},
 };
 
-static struct sec_jack_zone jack_zones_rev3[] = {
+static struct sec_jack_zone jack_zones_rev4[] = {
 	[0] = {
 		.adc_high	= 3,
 		.delay_us	= 10000,
@@ -3761,7 +3769,7 @@ static struct sec_jack_buttons_zone jack_buttons_zones[] = {
 	},
 };
 
-static struct sec_jack_buttons_zone jack_buttons_zones_rev3[] = {
+static struct sec_jack_buttons_zone jack_buttons_zones_rev4[] = {
 	{
 		.code		= KEY_MEDIA,
 		.adc_low	= 0,
@@ -4874,6 +4882,14 @@ static struct i2c_registry apq8064_i2c_devices[] __initdata = {
 		ARRAY_SIZE(max77693_i2c_board_info),
 	},
 #endif
+#ifdef CONFIG_SEC_FPGA
+	{
+		I2C_FFA,
+		MSM_SEC_FPGA_I2C_BUS_ID,
+		barcode_i2c_board_info,
+		ARRAY_SIZE(barcode_i2c_board_info),
+	},
+#endif
 #if defined(CONFIG_VIDEO_MHL_V1) || defined(CONFIG_VIDEO_MHL_V2)
 	{
 		I2C_SURF | I2C_FFA | I2C_FLUID,
@@ -4888,14 +4904,6 @@ static struct i2c_registry apq8064_i2c_devices[] __initdata = {
 		I2C_LEDS_BUS_ID,
 		leds_i2c_devs,
 		ARRAY_SIZE(leds_i2c_devs),
-	},
-#endif
-#ifdef CONFIG_SEC_FPGA
-	{
-		I2C_FFA,
-		MSM_SEC_FPGA_I2C_BUS_ID,
-		barcode_i2c_board_info,
-		ARRAY_SIZE(barcode_i2c_board_info),
 	},
 #endif
 };
@@ -5088,7 +5096,6 @@ static void __init gpio_rev_init(void)
 		barcode_emul_info.cresetb =
 		PM8921_GPIO_PM_TO_SYS(PMIC_GPIO_FPGA_CRESET_B);
 	}
-
 #endif
 }
 static void sec_jack_init(void)
@@ -5139,12 +5146,12 @@ static void sec_jack_init(void)
 			PM8921_GPIO_PM_TO_SYS(PMIC_GPIO_EAR_MICBIAS_EN),
 			&ear_micbiase);
 
-
 	if (system_rev >= BOARD_REV07) {
 		sec_jack_data.send_end_active_high = true;
-		sec_jack_data.zones = jack_zones_rev3;
-		sec_jack_data.buttons_zones = jack_buttons_zones_rev3;
+		sec_jack_data.zones = jack_zones_rev4;
+		sec_jack_data.buttons_zones = jack_buttons_zones_rev4;
 	}
+
 	if (system_rev == BOARD_REV09) {
 		pm8xxx_gpio_config(
 			PM8921_GPIO_PM_TO_SYS(PMIC_GPIO_FSA8048_EN),
