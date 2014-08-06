@@ -1381,6 +1381,23 @@ static int futex_requeue(u32 __user *uaddr1, unsigned int flags,
 
 	if (requeue_pi) {
 		/*
+<<<<<<< HEAD
+=======
+		 * Requeue PI only works on two distinct uaddrs. This
+		 * check is only valid for private futexes. See below.
+		 */
+		if (uaddr1 == uaddr2)
+			return -EINVAL;
+
+		/*
+		 * Requeue PI only works on two distinct uaddrs. This
+		 * check is only valid for private futexec. See below.
+		 */
+		if (uaddr1 == uaddr2)
+			return -EINVAL;
+
+		/*
+>>>>>>> 484a12e... Update to Samsung Source Update 8 (XXUGNG2)
 		 * requeue_pi requires a pi_state, try to allocate it now
 		 * without any locks in case it fails.
 		 */
@@ -1438,7 +1455,19 @@ retry:
 		goto out_put_keys;
 	}
 
+<<<<<<< HEAD
 >>>>>>> 028c533... Linux 3.4.92
+=======
+	/*
+	 * The check above which compares uaddrs is not sufficient for 
+	 * shared futexes. We need to compare the keys:
+	 */
+	if (requeue_pi && match_futex(&key1, &key2)) {
+		ret = -EINVAL;
+		goto out_put_keys;
+	}
+
+>>>>>>> 484a12e... Update to Samsung Source Update 8 (XXUGNG2)
 	hb1 = hash_futex(&key1);
 	hb2 = hash_futex(&key2);
 
@@ -2490,7 +2519,19 @@ static int futex_wait_requeue_pi(u32 __user *uaddr, unsigned int flags,
 		goto out_put_keys;
 	}
 
+<<<<<<< HEAD
 >>>>>>> 028c533... Linux 3.4.92
+=======
+	/*
+	 * The check above which compares uaddrs is not sufficient for 
+	 * shared futexes. We need to compare the keys:
+	 */
+	if (match_futex(&q.key, &key2)) {
+		ret = -EINVAL;
+		goto out_put_keys;
+	}
+
+>>>>>>> 484a12e... Update to Samsung Source Update 8 (XXUGNG2)
 	/* Queue the futex_q, drop the hb lock, wait for wakeup. */
 	futex_wait_queue_me(hb, &q, to);
 
