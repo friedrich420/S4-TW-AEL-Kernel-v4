@@ -371,6 +371,7 @@ static int sec_bat_get_cable_from_extended_cable_type(
 	}
 #endif
 
+>>>>>>> 6d55001... fastcharge & sound: corrected values
 	if (charge_current_max == 0) {
 		charge_current_max =
 			charging_current_table[cable_type].input_current_limit;
