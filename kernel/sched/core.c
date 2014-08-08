@@ -1653,8 +1653,15 @@ static void try_to_wake_up_local(struct task_struct *p)
 {
 	struct rq *rq = task_rq(p);
 
+<<<<<<< HEAD
 	if (WARN_ON_ONCE(rq != this_rq()) ||
 	    WARN_ON_ONCE(p == current))
+=======
+	if (rq != this_rq() || p == current) {
+		printk_deferred("%s: Failed to wakeup task %d (%s), rq = %p, this_rq = %p, p = %p, current = %p\n",
+			__func__, task_pid_nr(p), p->comm, rq,
+			this_rq(), p, current);
+>>>>>>> d2743be... SCHED: Fix remaining printk_sched after patch 3.4.102
 		return;
 
 	lockdep_assert_held(&rq->lock);
