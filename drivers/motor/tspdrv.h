@@ -28,7 +28,8 @@
 
 #ifndef _TSPDRV_H
 #define _TSPDRV_H
-#define VIBE_DEBUG
+//#define VIBE_DEBUG
+#undef VIBE_DEBUG
 #include <mach/msm_iomap.h>
 
 #include <linux/mfd/pm8xxx/pm8921.h>
@@ -185,7 +186,7 @@ int32_t g_nlra_gp_clk_pwm_mul = IMM_PWM_MULTIPLIER;
 	#ifdef VIBE_DEBUG
 		#define DbgOut(_x_, ...) printk(_x_, ##__VA_ARGS__)
 	#else   /* VIBE_DEBUG */
-		#define DbgOut(_x_)
+		#define DbgOut(_x_, ...)
 	#endif  /* VIBE_DEBUG */
 
 	#if defined(VIBE_RECORD) && defined(VIBE_DEBUG)
@@ -206,3 +207,4 @@ extern void max77693_vibtonz_en(bool en);
 #endif
 
 #endif  /* _TSPDRV_H */
+
