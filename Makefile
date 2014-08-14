@@ -1,6 +1,6 @@
 VERSION = 3
 PATCHLEVEL = 4
-SUBLEVEL = 102
+SUBLEVEL = 103
 EXTRAVERSION =
 NAME = Saber-toothed Squirrel
 
@@ -193,7 +193,7 @@ SUBARCH := $(shell uname -m | sed -e s/i.86/i386/ -e s/sun4u/sparc64/ \
 # Note: Some architectures assign CROSS_COMPILE in their arch/*/Makefile
 export KBUILD_BUILDHOST := $(SUBARCH)
 ARCH		?= arm
-CROSS_COMPILE	?= /home/friedrich420/kernel/Toolchain4.6/arm-eabi-4.6/bin/arm-eabi-
+CROSS_COMPILE	?= /home/friedrich420/kernel/Toolchain/arm-eabi-4.7/bin/arm-eabi-
 
 # Architecture as present in compile.h
 UTS_MACHINE 	:= $(ARCH)
@@ -624,9 +624,6 @@ endif
 # arch Makefile may override CC so keep this after arch Makefile is included
 NOSTDINC_FLAGS += -nostdinc -isystem $(shell $(CC) -print-file-name=include)
 CHECKFLAGS     += $(NOSTDINC_FLAGS)
-
-# warn about C99 declaration after statement
-KBUILD_CFLAGS += $(call cc-option,-Wdeclaration-after-statement,)
 
 # disable pointer signed / unsigned warnings in gcc 4.0
 KBUILD_CFLAGS += $(call cc-disable-warning, pointer-sign)
