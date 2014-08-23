@@ -31,8 +31,6 @@
 #define PON_CNTL_1 0x1C
 #define PON_CNTL_PULL_UP BIT(7)
 #define PON_CNTL_TRIG_DELAY_MASK (0x7)
-
->>>>>>> a47bf12... Add s2w, d2w, w2w and p2w
 /**
  * struct pmic8xxx_pwrkey - pmic8xxx pwrkey information
  * @key_press_irq: key press irq number
@@ -42,23 +40,10 @@ struct pmic8xxx_pwrkey {
 	struct input_dev *pwr;
 	int key_press_irq;
 	u32	powerkey_state;
-	u32	powerkey_state ;
 	int key_release_irq;
 	bool press;
 	const struct pm8xxx_pwrkey_platform_data *pdata;
 };
-
-extern void sensorwake_setdev(struct pmic8xxx_pwrkey * input_device);
-extern void screenwake_setdev(struct pmic8xxx_pwrkey * input_device);
-extern void screen_is_on_relay_kt(bool state);
-extern void boostpulse_relay_kt(void);
-//extern void set_screen_on_off_mhz(bool onoff);
-static bool screen_state = true;
-
-void set_screen_on_off_flag(bool onoff)
-{
-	screen_state = onoff;
-}
 
 static irqreturn_t pwrkey_press_irq(int irq, void *_pwrkey)
 {
@@ -193,10 +178,7 @@ static int __devinit pmic8xxx_pwrkey_probe(struct platform_device *pdev)
 	pwr->name = "pmic8xxx_pwrkey";
 	pwr->phys = "pmic8xxx_pwrkey/input0";
 	pwr->dev.parent = &pdev->dev;
-	
-	screenwake_setdev(pwrkey);
-	sensorwake_setdev(pwrkey);
-	
+
 	delay = (pdata->kpd_trigger_delay_us << 6) / USEC_PER_SEC;
 	delay = ilog2(delay);
 

@@ -1043,6 +1043,8 @@ config TOUCHSCREEN_PREVENT_SLEEP
 	help
 	This disables the sleep function of modified touchscreen drivers.
 
+<<<<<<< HEAD
+=======
 config TOUCHSCREEN_SWEEP2WAKE
         tristate "Sweep2Wake for touchscreens"
         default n
@@ -1050,7 +1052,7 @@ config TOUCHSCREEN_SWEEP2WAKE
 choice
 	prompt "Sweep2wake power key device?"
 	depends on TOUCHSCREEN_SWEEP2WAKE
-	default TOUCHSCREEN_SWEEP2WAKE_QPNP_PON if MACH_APQ8064_MAKO
+	default TOUCHSCREEN_SWEEP2WAKE_QPNP_PON if MACH_MSM8974_HAMMERHEAD
 	default n
 	help
 	  This option sets which pwrkey driver sweep2wake should use to emulate
