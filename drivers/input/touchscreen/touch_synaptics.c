@@ -1684,13 +1684,12 @@ static int synaptics_parse_dt(struct device *dev, struct touch_platform_data *pd
 		return -EIO;
 	}
 
-<<<<<<< HEAD
 #if defined(CONFIG_TOUCH_REG_MAP_TM2000) || defined(CONFIG_TOUCH_REG_MAP_TM2372)
 	if (unlikely(touch_i2c_read(client, TWO_D_REPORTING_MODE, 1, &buf) < 0)) {
 		TOUCH_ERR_MSG("TWO_D_REPORTING_MODE read fail\n");
 		return -EIO;
 	}
-=======
+
 	/* reset, irq gpio info */
 	pdata->reset_gpio = of_get_named_gpio_flags(np, "synaptics,reset-gpio",
 				0, &pdata->reset_gpio_flags);
@@ -1717,7 +1716,6 @@ static int synaptics_ts_start(struct synaptics_ts_data *ts)
 
 	if (ts->curr_resume_state)
 		return 0;
->>>>>>> 028988c... sweep2wake/doubletap2wake/touchscreen: Prepare for dt2w
 
 	if (ts->pdata->role->report_mode == CONTINUOUS_REPORT_MODE) {
 		if (unlikely(touch_i2c_write_byte(client, TWO_D_REPORTING_MODE,
@@ -1783,7 +1781,6 @@ static int synaptics_ts_start(struct synaptics_ts_data *ts)
 		}
 	}
 
-<<<<<<< HEAD
 #ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE_PREVENT_SLEEP
 	if (device_may_wakeup(&ts->client->dev))
 		disable_irq_wake(ts->client->irq);
@@ -1792,7 +1789,7 @@ static int synaptics_ts_start(struct synaptics_ts_data *ts)
 	if (unlikely(touch_i2c_read(client, INTERRUPT_STATUS_REG, 1, &buf) < 0)) {
 		TOUCH_ERR_MSG("INTERRUPT_STATUS_REG read fail\n");
 		return -EIO;	/* it is critical problem because interrupt will not occur. */
-=======
+
 #ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
 	if (prevent_sleep)
 		disable_irq_wake(ts->client->irq);
@@ -1818,7 +1815,6 @@ static int synaptics_ts_stop(struct synaptics_ts_data *ts)
 
 	if (!ts->curr_resume_state) {
 		return 0;
->>>>>>> 028988c... sweep2wake/doubletap2wake/touchscreen: Prepare for dt2w
 	}
 
 #ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE
@@ -1842,7 +1838,6 @@ static int synaptics_ts_stop(struct synaptics_ts_data *ts)
 		/* it is critical problem because interrupt will not occur on some FW. */
 		return -EIO;
 	}
-<<<<<<< HEAD
 
 	ts->is_probed = 1;
 	disable_irq(ts->client->irq);
@@ -1853,12 +1848,10 @@ static int synaptics_ts_stop(struct synaptics_ts_data *ts)
 	touch_power_cntl(ts, POWER_OFF);
 	}
 
-=======
 #ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
 	if (prevent_sleep)
 		enable_irq_wake(ts->client->irq);
 #endif
->>>>>>> 028988c... sweep2wake/doubletap2wake/touchscreen: Prepare for dt2w
 	return 0;
 }
 
@@ -2002,7 +1995,6 @@ static int synaptics_ts_probe(
 		TOUCH_ERR_MSG("i2c functionality check error\n");
 		return -EPERM;
 	}
->>>>>>> cdd22a0... drivers/input/touchscreen/touch_synaptics: patch with sweep2wake hooks as well
 
 	ts = kzalloc(sizeof(struct synaptics_ts_data), GFP_KERNEL);
 	if (!ts) {

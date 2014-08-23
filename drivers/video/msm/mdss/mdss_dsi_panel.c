@@ -25,14 +25,11 @@
 #ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE
 #include <linux/input/sweep2wake.h>
 #endif
-<<<<<<< HEAD
-=======
 #ifdef CONFIG_TOUCHSCREEN_DOUBLETAP2WAKE
 #include <linux/input/doubletap2wake.h>
 #endif
 #endif
 
->>>>>>> 028988c... sweep2wake/doubletap2wake/touchscreen: Prepare for dt2w
 #include "mdss_dsi.h"
 
 #define DT_CMD_HDR 6
@@ -197,7 +194,6 @@ static void mdss_dsi_panel_bl_ctrl(struct mdss_panel_data *pdata,
 		break;
 	}
 }
->>>>>>> 7860be2... mdss_dsi_panel: keep the panel gpio active and don't trigger a reset
 
 static int mdss_dsi_panel_on(struct mdss_panel_data *pdata)
 {
@@ -222,8 +218,6 @@ static int mdss_dsi_panel_on(struct mdss_panel_data *pdata)
 static int mdss_dsi_panel_off(struct mdss_panel_data *pdata)
 {
 	struct mipi_panel_info *mipi;
-<<<<<<< HEAD
-=======
 	struct mdss_dsi_ctrl_pdata *ctrl = NULL;
 #ifdef CONFIG_TOUCHSCREEN_PREVENT_SLEEP
 #if defined(CONFIG_TOUCHSCREEN_SWEEP2WAKE) || defined(CONFIG_TOUCHSCREEN_DOUBLETAP2WAKE)
@@ -245,7 +239,6 @@ static int mdss_dsi_panel_off(struct mdss_panel_data *pdata)
 				panel_data);
 
 	pr_debug("%s: ctrl=%p ndx=%d\n", __func__, ctrl, ctrl->ndx);
->>>>>>> 028988c... sweep2wake/doubletap2wake/touchscreen: Prepare for dt2w
 
 	mipi  = &pdata->panel_info.mipi;
 
@@ -321,7 +314,6 @@ static int mdss_dsi_parse_dcs_cmds(struct device_node *np,
 						GFP_KERNEL);
 	if (!pcmds->cmds)
 		return -ENOMEM;
->>>>>>> 49312bd... [PATCH] mdss_dsi: do not power down panel when sweep2wake is enabled
 
 	if (mipi->mode == DSI_VIDEO_MODE) {
 		mdss_dsi_cmds_tx(pdata, &dsi_panel_tx_buf, dsi_panel_off_cmds,
