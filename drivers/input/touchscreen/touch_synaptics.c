@@ -1234,17 +1234,13 @@ static int synaptics_parse_dt(struct device *dev, struct touch_platform_data *pd
 		TOUCH_ERR_MSG("INTERRUPT_STATUS_REG read fail\n");
 		return -EIO;	/* it is critical problem because interrupt will not occur. */
 	}
-<<<<<<< HEAD
 
 #ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE
-=======
 #ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE_PREVENT_SLEEP
->>>>>>> da853a4... sweep2wake: massive update, bring on par with s2w2 except algorithm
 	if (s2w_switch == 0)
 #endif
 	{
 	ts->curr_resume_state = 0;
->>>>>>> cdd22a0... drivers/input/touchscreen/touch_synaptics: patch with sweep2wake hooks as well
 
 	if (unlikely(touch_i2c_read(client, FINGER_STATE_REG,
 				sizeof(ts->ts_data.finger.finger_status_reg),
@@ -1330,7 +1326,6 @@ int synaptics_ts_power(struct i2c_client* client, int power_ctrl)
 	return 0;
 }
 
-<<<<<<< HEAD
 int synaptics_ts_probe(struct i2c_client* client)
 
 #ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE
@@ -1388,8 +1383,6 @@ static void touch_synaptics_sysfs_deinit(void)
        kobject_del(android_touch_kobj);
 }
 
-=======
->>>>>>> da853a4... sweep2wake: massive update, bring on par with s2w2 except algorithm
 static int synaptics_ts_probe(
 	struct i2c_client *client, const struct i2c_device_id *id)
 {
