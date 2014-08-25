@@ -1033,26 +1033,14 @@ config TOUCHSCREEN_SYNAPTICS_DSX_FW_UPDATE
 	  module will be called synaptics_dsx_fw_update.
 
 config TOUCHSCREEN_SWEEP2WAKE
-        tristate "Sweep2Wake for touchscreens"
-	select TOUCHSCREEN_SWEEP2WAKE_PREVENT_SLEEP
-        default y
-
-config TOUCHSCREEN_SWEEP2WAKE_PREVENT_SLEEP
-        bool "Inihibit sleep on modified touchscreen drivers"
-	default y
 	tristate "Sweep2Wake for touchscreens"
 	select TOUCHSCREEN_PREVENT_SLEEP
-	default n
-
-config TOUCHSCREEN_DOUBLETAP2WAKE
-	tristate "DoubleTap2Wake for touchscreens"
-	select TOUCHSCREEN_PREVENT_SLEEP
-	default n
+	default y
 
 config TOUCHSCREEN_PREVENT_SLEEP
 	bool "Inihibit sleep on modified touchscreen drivers"
-	default n
+	default y
 	help
-	  This disables the sleep function of modified touchscreen drivers.
+	This disables the sleep function of modified touchscreen drivers.
 
 endif

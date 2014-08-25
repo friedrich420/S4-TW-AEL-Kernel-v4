@@ -23,11 +23,6 @@
 #include <linux/input.h>
 #include <linux/log2.h>
 
-#include <linux/qpnp/power-on.h>
-
-/* Common PNP defines */
-#define QPNP_PON_REVISION2(base)		(base + 0x01)
-
 /* PON common register addresses */
 #define QPNP_PON_RT_STS(base)		(base + 0x10)
 #define QPNP_PON_PULL_CTL(base)		(base + 0x70)

@@ -24,13 +24,5 @@
 extern bool s2w_scr_suspend;
 extern int s2w_switch, s2w_s2sonly;
 
-#include <linux/input.h>
-#include <linux/earlysuspend.h>
-#include <linux/hrtimer.h>
-
-#define SWEEP2WAKE_I2C_SLEEP 40
-
-extern int s2w_switch;
-
 #endif	/* _LINUX_SWEEP2WAKE_H */
 
