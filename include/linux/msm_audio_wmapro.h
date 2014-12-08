@@ -1,22 +1,4 @@
-#ifndef __MSM_AUDIO_WMAPRO_H
-#define __MSM_AUDIO_WMAPRO_H
-
-#define AUDIO_GET_WMAPRO_CONFIG  _IOR(AUDIO_IOCTL_MAGIC, \
-	  (AUDIO_MAX_COMMON_IOCTL_NUM+0), unsigned)
-#define AUDIO_SET_WMAPRO_CONFIG  _IOW(AUDIO_IOCTL_MAGIC, \
-	  (AUDIO_MAX_COMMON_IOCTL_NUM+1), unsigned)
-
-struct msm_audio_wmapro_config {
-	unsigned short 	armdatareqthr;
-	uint8_t         validbitspersample;
-	uint8_t         numchannels;
-	unsigned short  formattag;
-	unsigned short  samplingrate;
-	unsigned short  avgbytespersecond;
-	unsigned short  asfpacketlength;
-	unsigned short 	channelmask;
-	unsigned short 	encodeopt;
-	unsigned short	advancedencodeopt;
-	uint32_t	advancedencodeopt2;
-};
-#endif /* __MSM_AUDIO_WMAPRO_H */
+Ú"Œ§™#½ı;ê7Ä¶ô÷±Moåí—1Äáy'wÁPÛä`äÙXs¨7lWF¢­´m²w÷úã™ı)|©6CúÍR#ãU÷³úhë'÷cÑFïÉæcı”Ş\îN¿Æqùr5Ú*x¯îaáAù]®ïó–1ú-øl váó÷ëX+5ÆØ£šÂgóXÌÑÈ2©ÎŠĞ<	Şù^ÔÿˆSÂû Ú’)^#Ş§§ğ^iWáŒ5oLõó–Üböv~ãJÁ~a+­s+Á%_3¯Ç&oçúéÊ	¢3½ù¤tö–±QÕ9»¬€şo¯ùømiÂq¾~wyÕÇı&¦;oÁïİ–Óß]_åx8œú¡³–©ï«¼ß3@óï€6ÚÓ¦µ³â_´e?vÃZòvĞ£<Võ—¸TOAÙà àÑ#¦¯ı¡p©¡Âµ÷hšÆMÜÜGFàíÖõB[à–Üªõ ı¾óâ÷‰•mÑFwÈ”B/ØsFGÓkØß¤Ú›;îÛ#×¡ïE‘g
+ÆÕxº5b•ğ]
+¸Í2fO‹ß¢ío´G¬p‰,ï¼Æk³$Ä¡SÂc•È³ın«¯‡,ùéN£:•ùvß©y?ñh'æÛm}¼üR-£şÌãNğuGZ…İˆ;%ãpûiÿ
+}-ô‚©à‹ÑBë&^~¯£…Î:ü-h×ÙìÆ®›X§)"ëòÌHÈZAµxÄdó,ôu–èıÊvë~Ó\ÁÕfSşw?do)g³ÄŞOnç5ßárÄ·¯ñš/3¿³†×|«·ñšï;Ğ<Ò4¥şícËßl‘í6‘¥¬·Ó(ë=Ò=Š<K€[ÓBÅFè/zYÅî‚{¹ÛåÎÖ=Ã9ÀİõİiıoŒ»öüiáÛFpÃ+–1÷

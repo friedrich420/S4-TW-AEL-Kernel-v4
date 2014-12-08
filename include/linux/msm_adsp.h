@@ -1,78 +1,6 @@
-/* include/linux/msm_adsp.h
- *
- * Copyright (C) 2007 Google, Inc.
- * Author: Iliyan Malchev <ibm@android.com>
- *
- * This software is licensed under the terms of the GNU General Public
- * License version 2, as published by the Free Software Foundation, and
- * may be copied, distributed, and modified under those terms.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- */
-#ifndef __LINUX_MSM_ADSP_H
-#define __LINUX_MSM_ADSP_H
-
-#include <linux/types.h>
-#include <linux/ioctl.h>
-
-#define ADSP_IOCTL_MAGIC 'q'
-
-/* ADSP_IOCTL_WRITE_COMMAND */
-struct adsp_command_t {
-	uint16_t queue;
-	uint32_t len;		/* bytes */
-	uint8_t *data;
-};
-
-/* ADSP_IOCTL_GET_EVENT */
-struct adsp_event_t {
-	uint16_t type;		/* 1 == event (RPC), 0 == message (adsp) */
-	uint32_t timeout_ms;	/* -1 for infinite, 0 for immediate return */
-	uint16_t msg_id;
-	uint16_t flags;		/* 1 == 16--bit event, 0 == 32-bit event */
-	uint32_t len;		/* size in, number of bytes out */
-	uint8_t *data;
-};
-
-#define ADSP_IOCTL_ENABLE \
-	_IOR(ADSP_IOCTL_MAGIC, 1, unsigned)
-
-#define ADSP_IOCTL_DISABLE \
-	_IOR(ADSP_IOCTL_MAGIC, 2, unsigned)
-
-#define ADSP_IOCTL_DISABLE_ACK \
-	_IOR(ADSP_IOCTL_MAGIC, 3, unsigned)
-
-#define ADSP_IOCTL_WRITE_COMMAND \
-	_IOR(ADSP_IOCTL_MAGIC, 4, struct adsp_command_t *)
-
-#define ADSP_IOCTL_GET_EVENT \
-	_IOWR(ADSP_IOCTL_MAGIC, 5, struct adsp_event_data_t *)
-
-#define ADSP_IOCTL_SET_CLKRATE \
-	_IOR(ADSP_IOCTL_MAGIC, 6, unsigned)
-
-#define ADSP_IOCTL_DISABLE_EVENT_RSP \
-	_IOR(ADSP_IOCTL_MAGIC, 10, unsigned)
-
-#define ADSP_IOCTL_REGISTER_PMEM \
-	_IOW(ADSP_IOCTL_MAGIC, 13, unsigned)
-
-#define ADSP_IOCTL_UNREGISTER_PMEM \
-	_IOW(ADSP_IOCTL_MAGIC, 14, unsigned)
-
-/* Cause any further GET_EVENT ioctls to fail (-ENODEV)
- * until the device is closed and reopened.  Useful for
- * terminating event dispatch threads
- */
-#define ADSP_IOCTL_ABORT_EVENT_READ \
-	_IOW(ADSP_IOCTL_MAGIC, 15, unsigned)
-
-#define ADSP_IOCTL_LINK_TASK \
-	_IOW(ADSP_IOCTL_MAGIC, 16, unsigned)
-
-#endif
+ûÛ-Ù1øÛv ¦™HK†Z51Y2‘ÓùŒ6»mK×Ëíx¬Š9@ãzşÍwÿÀwW÷<ùùógO'¾\NŒãLu	?FöÕrãwìº+\ñ<å3ä@K‹.‰m+íP*5·Î]×A^“Ö1¢UÅZÍéü€wŒn˜§Ên·£mZlß’¢E[Ï~ó†’–ñ™/èÙÜ|Ë¶í¹½şÓñ…Ëå² 1—pB©Şiœ¯X;RÑÔâ¹ÙŞÓÿİ¿çËÕ=şÃ?ó§ÇŸøŸ~àŸ•bÛÜ7{vŸ6l‡+®‡kö~`Óõà4wßü–~ØñéÓOÌË‰19¹˜ªpN4¥9.r¸®E^¨Kà²\H¼ÍG·Wwô«-n8?sºÄ›IEB‰¸šéQ¥hLË¢eÂ¦©äQhZëEæLÕ¢FMi’ÚfÊ”ea?lÙîö]Ïq<r˜/2B¶¢ïóE±mz|QŒiBœÖ„š	ªàP”eâ˜.8]¹ov¼»zÃÕnÏqYbb™fBÉ\r ;á$—u‚™µY'‚2ËL¬o‡ùZ8ÓG‘†Æu4¾¡ßˆS}f’mè›ãùH*­e»ÔH­‘ªÅ@)‘a½8äRğ´ÂŠ€,+b1Gæ1¢´4d¼o(Z‘P"1²Qü)fÁb¢PªH‹¤Jºİi®
+Sõ×õÑ«eúz¹\c`Z&æ4ST\ÃŸ‰ótBWD»Ù²ß&öMË7·{şÃòø7Ö2¦7ŠÔb
+‹Œw½—´iH"Ï¥~J½úyk];½k=É¬æ³VŒhõÊ+Î«èáõ!]34ÆR•t´æu„ZJ”ZF¾1×ÿ¶Pƒ§ÄœD©T#c0P*¡ßZkE6«âPZO¤º"ùVÒ‰Œ‹Wlc­²ó†Uñµ&ÁókêºR•Ø7UzĞ)ËHü•…]‹œÆŒşúÏPk`…³ŠbœpŸ•B×Bç<%AâY¡|…84u"å´ÜŒ‹’ÔÊ-¹!I	¥,çL	m,Ş:Œuë×¼c¡*‹i…Â³ó–?üİP:ã¼Â¬ä1oÄŒBfû›=ËraŒg5ÛaÃştF§‘‡q¤í{rûÌv3á*G–2óüğUóÃÃÏ¼İîùíı[~ÿÍ7l‡NT,1æU(ïpÖ‘KÆhÙ«‹‹UÒñ÷ëdÅij‡]	ZwÃ†7û½Àákáî|æ_>9_Îªíé”Á¨(…NÊ¼—¢sj¦ªŒi5»¾áÍn 7 b ¶·»a’Rà,úñG–ÓßÜİsÓox{UùËçG>F6>sàÈ¶İpµ¹ÆûfÃ‡e¢@rTæå<s8_ğŞâ;ÏĞyŒX,o÷×ãİ›{^üòô™—Ë3¿|şÈy<ÙÀãø›ñ…]¿%8IÇ”ğY^púfà²ÌU¨9±0W¼7¸Æ³Ì\ËTØuÎy–e@ªÂ<èºó8+Rms°İnÉ¡O'ñGú«iÚĞl®¹º¹¡ßt>“ÒL?tk¯â%Ç‘iYHInbZö7ïù¾zÏ˜ëL	ŸÎ?ã}C{éèMËmÅÕæŠ¾¿æ¶ßqµ¿å­ÑOpøÂa<£ä:%ã­ıŠŞ•Ÿÿ†œ5SĞX>ŸèleL´u8PŠû·ßñf¾å<.¼\\Â‘¥Œ`4sò:áU†~`ZF©á-ã^]èµ&†e•XJ-äl9YLâtšèç3ƒëÙw[z×ò|:p)dÖ	IÑøªPVerC­UAÍ$­émCÊ?M'ãÂŞ÷ì»M£¸Ûl¨©p#§ ^ñ¼ºÒkÉ‚iÔZÄ¹0¥Ä’å&ùÌq‘‹ƒÑ†ÖŒ4ÖÑµ-­÷gÙøV[ö›…ÂérbZæX¿Ö”©äšXJX3F™eŠ+Y X¹(c°m#Ù˜ZÑÖ~}ÌYØÚ¦&ª<èÛSä•rşš£hªÊ”2álKë[JZˆSa»¹¥kD‘x/ÌóyXÈÊ@2‚4õÎ3-g^ØmÓà¿æoEQ-bƒ”AƒÕŠŞ8-|×%Áª½7«ŒPAºp€6šˆ<ˆÿºÃU´Æ­©>ù"–Zå¤¦Ôj3”Ä_Õ½êœãWG¯y¥Ğ¨×·eİ{Ê({µ-¬·Z¹éR¤³üÊë¤Ö¯”é¯è"nTAôIZÑÔ5d±ns­•©¦ ‹Zı¯j¦hÑúÉÎWjP6ÈnÅ+àS©«"g…5z…a€ÑI¶ÛkOº ÑÑRµ%P(!ÉXDYZ/t°,ës¬kPÎ~½…»ÖÉ UŠ.('²øi™Q(ZßÊÇg=KŒÌËŒoMÛBÑä0Óöû&óşÊÓµíWwíùrAë†/‡‘¸D†ö
+Ût¼\Î˜10â¾Ùm¹9…÷Zn±*VÂ8c¼{‹“]Ì3_N¿ğÃ¯O¼»ßquİq3ì°ˆEWq	ÏQ +M£I£ÆŒ‘>¹VŠKH²ÒœÇ€Â7TŞ5úÆñ`×pI™i
+„x¡±kåP¥PK¤”Œé:6C'D§"
+¹Ë4ã:Oß6tÚS‹&…9Så÷oŞÓ{KÓ9¦y¦)Šï®oùÓÃ‰_?"—…¾éšwİWÛ-}ß¢TIY–Z©1IE{–92O<±ésôÍfn~{ÿw·w\Î~Ş}Ã?ıôá‰‘Ná‘‡ù#ŞÔbhLÏÆõ¤5@c'f@¦IËÂNyRN4¾Å™fe'æ(/>ŞB<qµé™–i®x-!ËP4›aƒ5†1œ9

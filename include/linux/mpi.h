@@ -1,144 +1,15 @@
-/* mpi.h  -  Multi Precision Integers
- *	Copyright (C) 1994, 1996, 1998, 1999,
- *                    2000, 2001 Free Software Foundation, Inc.
- *
- * This file is part of GNUPG.
- *
- * GNUPG is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * GNUPG is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
- *
- * Note: This code is heavily based on the GNU MP Library.
- *	 Actually it's the same code with only minor changes in the
- *	 way the data is stored; this is to support the abstraction
- *	 of an optional secure memory allocation which may be used
- *	 to avoid revealing of sensitive data due to paging etc.
- *	 The GNU MP Library itself is published under the LGPL;
- *	 however I decided to publish this code under the plain GPL.
- */
-
-#ifndef G10_MPI_H
-#define G10_MPI_H
-
-#include <linux/types.h>
-
-/* DSI defines */
-
-#define SHA1_DIGEST_LENGTH   20
-
-/*end of DSI defines */
-
-#define BYTES_PER_MPI_LIMB	(BITS_PER_LONG / 8)
-#define BITS_PER_MPI_LIMB	BITS_PER_LONG
-
-typedef unsigned long int mpi_limb_t;
-typedef signed long int mpi_limb_signed_t;
-
-struct gcry_mpi {
-	int alloced;		/* array size (# of allocated limbs) */
-	int nlimbs;		/* number of valid limbs */
-	int nbits;		/* the real number of valid bits (info only) */
-	int sign;		/* indicates a negative number */
-	unsigned flags;		/* bit 0: array must be allocated in secure memory space */
-	/* bit 1: not used */
-	/* bit 2: the limb is a pointer to some m_alloced data */
-	mpi_limb_t *d;		/* array with the limbs */
-};
-
-typedef struct gcry_mpi *MPI;
-
-#define mpi_get_nlimbs(a)     ((a)->nlimbs)
-#define mpi_is_neg(a)	      ((a)->sign)
-
-/*-- mpiutil.c --*/
-MPI mpi_alloc(unsigned nlimbs);
-MPI mpi_alloc_secure(unsigned nlimbs);
-MPI mpi_alloc_like(MPI a);
-void mpi_free(MPI a);
-int mpi_resize(MPI a, unsigned nlimbs);
-int mpi_copy(MPI *copy, const MPI a);
-void mpi_clear(MPI a);
-int mpi_set(MPI w, MPI u);
-int mpi_set_ui(MPI w, ulong u);
-MPI mpi_alloc_set_ui(unsigned long u);
-void mpi_m_check(MPI a);
-void mpi_swap(MPI a, MPI b);
-
-/*-- mpicoder.c --*/
-MPI do_encode_md(const void *sha_buffer, unsigned nbits);
-MPI mpi_read_from_buffer(const void *buffer, unsigned *ret_nread);
-int mpi_fromstr(MPI val, const char *str);
-u32 mpi_get_keyid(MPI a, u32 *keyid);
-void *mpi_get_buffer(MPI a, unsigned *nbytes, int *sign);
-void *mpi_get_secure_buffer(MPI a, unsigned *nbytes, int *sign);
-int mpi_set_buffer(MPI a, const void *buffer, unsigned nbytes, int sign);
-
-#define log_mpidump g10_log_mpidump
-
-/*-- mpi-add.c --*/
-int mpi_add_ui(MPI w, MPI u, ulong v);
-int mpi_add(MPI w, MPI u, MPI v);
-int mpi_addm(MPI w, MPI u, MPI v, MPI m);
-int mpi_sub_ui(MPI w, MPI u, ulong v);
-int mpi_sub(MPI w, MPI u, MPI v);
-int mpi_subm(MPI w, MPI u, MPI v, MPI m);
-
-/*-- mpi-mul.c --*/
-int mpi_mul_ui(MPI w, MPI u, ulong v);
-int mpi_mul_2exp(MPI w, MPI u, ulong cnt);
-int mpi_mul(MPI w, MPI u, MPI v);
-int mpi_mulm(MPI w, MPI u, MPI v, MPI m);
-
-/*-- mpi-div.c --*/
-ulong mpi_fdiv_r_ui(MPI rem, MPI dividend, ulong divisor);
-int mpi_fdiv_r(MPI rem, MPI dividend, MPI divisor);
-int mpi_fdiv_q(MPI quot, MPI dividend, MPI divisor);
-int mpi_fdiv_qr(MPI quot, MPI rem, MPI dividend, MPI divisor);
-int mpi_tdiv_r(MPI rem, MPI num, MPI den);
-int mpi_tdiv_qr(MPI quot, MPI rem, MPI num, MPI den);
-int mpi_tdiv_q_2exp(MPI w, MPI u, unsigned count);
-int mpi_divisible_ui(const MPI dividend, ulong divisor);
-
-/*-- mpi-gcd.c --*/
-int mpi_gcd(MPI g, const MPI a, const MPI b);
-
-/*-- mpi-pow.c --*/
-int mpi_pow(MPI w, MPI u, MPI v);
-int mpi_powm(MPI res, MPI base, MPI exp, MPI mod);
-
-/*-- mpi-mpow.c --*/
-int mpi_mulpowm(MPI res, MPI *basearray, MPI *exparray, MPI mod);
-
-/*-- mpi-cmp.c --*/
-int mpi_cmp_ui(MPI u, ulong v);
-int mpi_cmp(MPI u, MPI v);
-
-/*-- mpi-scan.c --*/
-int mpi_getbyte(MPI a, unsigned idx);
-void mpi_putbyte(MPI a, unsigned idx, int value);
-unsigned mpi_trailing_zeros(MPI a);
-
-/*-- mpi-bit.c --*/
-void mpi_normalize(MPI a);
-unsigned mpi_get_nbits(MPI a);
-int mpi_test_bit(MPI a, unsigned n);
-int mpi_set_bit(MPI a, unsigned n);
-int mpi_set_highbit(MPI a, unsigned n);
-void mpi_clear_highbit(MPI a, unsigned n);
-void mpi_clear_bit(MPI a, unsigned n);
-int mpi_rshift(MPI x, MPI a, unsigned n);
-
-/*-- mpi-inv.c --*/
-int mpi_invm(MPI x, MPI u, MPI v);
-
-#endif /*G10_MPI_H */
+ÚëúBµI7±n´öòÚmÒËÆ”i]ˆ”Ğ!ì^Ç­Ü½®:¤Õ8¾_KÜtébsã´ŒÓ®é6æc§¦ğÌDÒÁ
+Ò¼œİ¢Cú×w5ŸÚ«è’îu«±¦ù™Qº¤w­n«ÕÉÜ¦K:×y4t~<Ğ%}«Ğõs3tI×*;YIãºV·.éYŸ}+PVĞÕ#ë§kÕı¾MÒ#ıª”öxõéi{õH·êò@@ıòŸOõH¯z],Im¢E¾éTÇo8 ¶îU¯éSOÆ:©å0Æú¤Kıc CuIğ}Ò£ºØ¨‰Ö'ªÀ‚uª÷¦òôI:ğ‡¾ªÌ±b}ÒÎ<\­2öÑO}Ò›Z¼«bôÂÌ€t¦›f©\¹?Û€ô¥JÓ¤U68j@ºÒƒF™ÊOÆøT¶ı„²\‰éHı½•Ÿ?4 ıèÅ=JŒ¹¹!éFo…+åü=Ûô¢WînU2<jH:Ñ«†fJ#gø’>4éY½bïÙbCÒ…NT{¬èê?`HzĞÎW¬61"¨Ú{yÅ·A3ŒHÿaŸ« sõ é>ç8£°|Ñs#Ò{šD3
+‘²ùF¤óœÓÜ'ÿ5ø‡é;%ä¢ä…İôI×¹Óz»|ÿ$cÒsÆ0æò¢»IÇ)<©ANkêccÒo™øXîÃéÆ¤Û\Ï™/§r»Ã˜ôšE–òr_ï¨™Nó‹LlçŸ#MHŸù¥ù”l×ÜM&¤ËŒõ‘­U¸iBzÌ‘'zdşyoB:Ì¦‘á2ZãMH©Ù»YÆ-IÊ”t—¢¾Æ2ÕÚÎ¦¤·¬šö^ºsíRSÒYÆµİ“^xç´)é+ËOÍ’şdJºÊEJRÒ¹!e¦¤§Üş(Mêù½Ÿ¦¤£¥}LjûFc3ÒOİq“R1˜jFºÉBñ.É£É»ÍH/Y·'@òú¤Gf¤“\öv¤s\Šé#wzèHÎ–ÿlFºÈ‰7+$Š¦+˜“Ræã5‰û{ÜÍIÙî0Iâú‰æ¤T<((ñÏŞ³æ¤{ô‹OŸlNzÇê{ÄËÌIçXic+¾7¡ßœô™+šÅz'X®±òò?bÚÉ,HÏè½H,[g»éEŞ(Šµ¬¼mAúÅÃ½¹¢«.Æ[nñµÒQí‡u¤W²äˆ
+]µ$âNÈàkKÒ'jNùj3Û’t‰Óo)(ßoIzDë5†"û×üeI:ÄÚÕÂ)–¤?¼½å¶p¹]‹%é÷n™&¼t»ŒéC6Š
+Ï»éhE:Ã­k^ù=Z`EúÂ·K1X‘®Ğd¶ƒĞò§V¤'Ü?ş³à;Õ+Òşt.õÙŠôƒKºÉY“np¶†Š ìßNÖ¤<$V °¼u5éO;+0Oûˆ5éŸÔ1oş±&]`wnïˆ7ViÖ¤	á)ÙbM:Àş6hÉ“²!ıŸÈ%£ù»ílH÷7°§æWÉĞlÒû‰®¸ó«aÛ>ÒùÍ™4ıW3ÿéûdÅ~åö$Ú®oµè€béùHz#/dK:¾³½CUİ&¶¤ßiú<¸2v¢-éöt+.^µÅ–ôzÂ™K#Û¯Ø’NïBœÊàœea¶¤Ï«.øiVbKº<Óç~j4}³%=ŞíÇ#*ÿRµ#Şì{}Bîv¤¿»t;b øÍb;Òİm½½e`Ó£#v¤·3¸g<Ã<±#]ÙãwıÏ3^Û‘¾.‚{·_Û¾ŞtuMá3ú¥Ú“î¯dñşFö¤£,Oî‘0Öôs£ÚõU¯³'İÜ1ç¾š“gíI/7`ÚŞÛîákO:¹‚É¼Ş’L{ÒÇYì^ÑûuZ‹=éâ<şQï} î@z8‹’â©ŸÌHg"q©ç¬Ä$Ò¿-7¶g‘Ô&Ò½uœüÑqŞônJ1?Dú9Îí«æÜEY¤o‹İfñC½¾Ùtm×2¾§Ns$=Ûs“ÇßoÜ2u$›ş¥yßw¼çHú5‡ÙïSsÖ:’nMpsÖ7Å—§I¯öºñÄ·°ÓÏI§vs­×7§dGÒ§ù¶}ûjœRëHº4«#!_Ë†I6AiãW…“ÚN¤C30øšáéDú³ş…Õİ©HwÖ$v§{Vô>'Ò›i¾Ş-pî¶éÌøÇÄ»ëÜ#œH_&4!¥«&§Ğ‰teòêGºê½ÛHO&ßíÒU{UÒ™tdöå_RùfÎ¤{˜ìÿåpÉXgÒ~¹æË÷ÔUÎ¤û£óEïÎ1gÒ‰MæWv6{äLú°k¥7:½+^:“.¬çË”NéñeÎ¤Víç‹3éÀª'ó;ªR¥]Hÿ|îPGx±¹é¾¦:w¼~5Ö…ô^Ÿ:Û».®t!—ÿqÿvW×#.¤ïŠmYÓ~”Ï…t]c–é¶G[Dºk×»ª¶‚.¤ãÚ½éV[ôıO.¤ßúC`zÛ’'Â®¤ÛºÎo=©çJz-¡ù©­ÿŒót%V·â±Væ¹®¤Ï:WãŞª¶áWÒeµG|ı|4ı‚+é±¦ßùÌ¾p%VåÙMŸ§ê¼r%ıUØiãÏwT«\Iw%r½ö“DG—+é­~ù=ütÿ¹”é¬rç}rr3ùŸ¾ê†°Â§?ÎÿtUÇ&äµLí]ğ?=Uüıs-A&;ÿ§£ÚÑ;º¥ÊşâÿôS¹ë‡šS4»‘nê{c\óâº7ÒK©íØÛ|ıt™é¤–K94/mw#}Twt[Ó“u"î¤‹üÃ¯iş3wÒCz¬mÚ™èâN:(%ı¦ºÈiî¤ºı³úãíóëÜI÷dôãŞÇcGİIï4økÎÇkÙ·İIç4YSşc¼K;é›\Æå}è<–êNº¦æ?ÏĞç¾u'=Ó¥ü±Fúu¹“i²•Àæ¼¸é—¦?Lj”§çAº%¾æ¡Æï]<H¯”äÚØ1wªé”îÍüÚPç»ÚƒôI3DÃ¶Vğ ]’VÁÖ†3W=HdêgÑ ÷ÂƒtHn7Õ›Üˆ÷ ıÑã[Ïëo8yîh1weıÜ°¤7ú™­S¿RrÀƒtFÕu~#å=I_tmêı:½9&¤+*˜W7ÊÓ“ôDÿh+ÕmáI:"İgEµ:‘k<I?´Ïëjm¡ËOÒ•´L©İqû²'é…HÔ~-øÇ“tBnf¾Ÿú1Ê“ôA·6ŸyÿGe–'é‚îló~:·Æ“ô@ë
+¼¯şÅ“t@ö¼×ï”Ë„¼Hÿ£ùáè»gµÿõİîæıÎg§¥é}¾şİ_£~ÁÇ‹t>Nºq5›Ìô"}kÄş£)k¼H×c´ÔµÆûû^/Òók¯æ:ïE:Uİ‘Õªz‘~G vWõXµ`/ÒíØ68T¯¶}íEzÙŸ_Ş¾Ğ/ö"NuØ[/Òç\ÚóÇÛ­w¿y‘.g©íÛQoÒã¼œÔñfÜ5oÒáì®~ó$ÜÜ›ô7%G¶½y›îáMº›A›7Q“½Io£)×^Uvl‰7élfıª:f´Õ›ô59Ûªñ&]M°MÕŸ—½IO£?¿½2Ìá/oÒÑLåWŠ
+ö&ıÌ|™í•_,“¼I7³áªmåêÎ<oÒËğÌ;+f_­ñ&ŒgMhE¬X›7éc&ûï¨¸°dàõf?¯9T$^ô!=ÌÁëİåojø¦) ²Üh¯¹é_6×î)çèö¿şˆ6¶®å/²ÇùŞeî½27¯¹>¤sÓŠ+ûqvµé[¶Æ*«ÚáCº–€]Şe%AÇ|HÏÒ4~¨ôıÙË>¤c™èÊ/íö|èCú•ï#O–ŠeûúnEyÃØR%‡hÒ«äú‰–ÊíNñ!ÊHÑì’¯W}HŸòàø¥’èÓ5>¤KP^2cî'Ò£\Í/‰üîC:”ı·K‹?ı)È!ıÉÛcw‹ß¼“åî¤öÌ¢â“ÊZÒ›úkW›qHg²æsmÑ{Y'éKl&>/:YÂá®Ä&u}Qò“9¤'¹´Ä²èvÓ<éH6)t~u]Å!ıHç‡ğÂÊ•[9ÿÓTì-ô\»ŸCz‘Ó=
+•GäNäâPÁŠËÒ‡ì\R rî‡t!ë²ÎØ}yÊ!=È»™S
+xAÒüê‘+Ø;=†Cú¤²üÛcøÒ}={?¤Ã!½Goy~p\)‡t?³òz¾ã¾ãšô§¼äÛMÒuğ¶‡äifurHÏ±îËî¼§e½Òq|¹á‘73^€!ıÆ–9¿rJ2¤ÛèwNÏ•SPbH¯Áw½”«rR‹!FÃÂY¹¶yFé3N=RËÓiÅ.#kè]Î‰V'†ô%'_äDò½ÒadšmÉiÜ>†!ıEV»CÌÉé.Êz³­çÏfHoqâİëlïk‹ÒY;—íşt%Cú
+å9Ó³µ/o`HW±‘¯’İ8c;CzŠG3Şe]lÛÃ¢d7Kzõa†ô6e[³Ö…`H7Qœíœu³òCz‰ÚúŸ™×*¯0¤“8¤¹0ìCúˆôƒW2[V=`HÑĞ7/“Óö„!=D÷cİÌy3^0¤ƒĞXÓœayÉŸ!ıÃ©a	‡0¤{pXt0CğJ$Cz‡FgüšËÎÁóTFpW"Cú†ü¹åé’›’Ò5Œşò$]).!=C\èÆôŒúl†tso9¦ë7æ3¤_p}ô3M7©˜!İÂ±ÌŒ´W”3¤W˜®~#m¨¿Š!BÖ•%i5ËkÒ'H››¦Í{TË.Á«ùKê†°†ôûsRŸ|dH‡P[v6uöÚ†ôw„f§š
+µ2¤;ˆ[ “zùP;Czƒ­Å-)§s:ÒäïˆJ‘úÚÅ¾`ÈåÏıo_ÒèLMIÍÿÎ`†£zJ×ñ†t¡›>$Hö1¤X‘–Ü¶­Ÿ!İÀ±)G“cıÒXÿ˜”,ıê'C:‹™ªÉÍƒé¢_7ò'ïbHPø>Œï(û‹!=Àãcü§§1¤˜|s
+ÿné/†øÿÏ¦|…_Õÿ}ohzSİÿ…Œ¨×x=ÕfŸ|÷›Ş´é5Ş?OxÖk|Õ¾\¡÷ßÇæ±èk|?¿†öWø¾T˜x%ñ‡ú(®ºô
+ÏKõÙK¿Âzõ
+ë3ô§Å+¬Õ	æ÷&a=œªKÂú.“•„õ¦zÁäú{IØê+ í¿!	ûEuƒ—¸%a?]ê%am#Å’°ßT?¨÷£2çAÏŒŸˆóqtµ_"ÎÕ®ï=ˆóD}~¼œ”ˆóFõ„“Ÿj&â<úš%â|ˆjMÀy¥ºÂè®Äœgõ¸	8ß¢‹®&à¼S}áÕÏ+p¨oÁVCîÕ&\JÀ}ª¸Öûuï¯òxÜ7ª7Ô}ãûøYôF<îçVæP<îëÿê‹¦Æã>SŸƒœËzñ¸ïT¨´§;öàsOuìÃÍ³éq°T‡¸&í~ìÉ­İ'ã`_Ùlƒ½¡zÄÍ)LìõE¨<©{Eu‰B4ÇÂ]Ü[û&y.!öêÅs¯ÅÂ^<û¨êµ6ö’êgUºÇÂR…’¿ebao©^1úvÃKØãR½ü—°ÏJ1/_Â^Sİ¢¸ğ•—°ç©	û_Â¾[ıöêuMİ_ÂPß…İı2/á/¨1k 1şd±Laü‹«e|üÕ3Vœ¹ô4ípüSªì†ø+ªkTM÷‰?£>-~Ê1ğwTß8'¾5şĞrne4üã¾”høKªs\´şa4ü©€íÙhøWS]Ñğ·Tïø%{R4ü1õu(âDÃ_SİcíÇ¾(øó×MQğïÎ%Qğ÷Tÿø9> 
+ñ€ƒÌ½(Äê[NE!^ :ÈŠIK£OPŸ.Qˆ7¨rí-Ù(Ä#âc"Ÿ¬jD¼Bu‘sï'G"iß‰øfêªG‘ˆw¨>rÍ¢½‘ˆ‡¨oDøŸ3"/QäôJ‹HÄS«”Õ"_Í\&‰x‹ê%k#­=ø¬¾'.ñÕM>‘¾xúLèÌÚxê'w§O‰@<x÷†GâÃØMfˆ©R€#xÒÎ³+ñåúÑµáˆ7©rp_B8âQêKQ]}/ñ*ÕUªîÜxö}şêpÄ·é®³ÂïR}å µm8âá9ñÚáˆKçH…#^¦:Ëå-aˆ§©E¤SFâmª·lj{†xüMõÍ0Äç2•'Â¯Sİ¥O÷Š0ÄóŒâŒ
